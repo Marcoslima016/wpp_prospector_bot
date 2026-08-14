@@ -6,6 +6,10 @@ import { WarmupSchedule } from './warmup/warmupSchedule';
 import { PerSessionWarmupGate } from './warmup/perSessionWarmupGate';
 import { DailyVolumeLimiter } from './outbound/dailyVolumeLimiter';
 import { SendQueue } from './outbound/sendQueue';
+import { loadReasoningConfig } from './reasoning/infrastructure/reasoningConfig';
+import { ClaudeReasoningRepository } from './reasoning/infrastructure/claudeReasoningRepository';
+import { FileConversationRepository } from './reasoning/infrastructure/fileConversationRepository';
+import { ProcessIncomingMessage } from './reasoning/application/processIncomingMessage';
 
 const DAILY_VOLUME_LIMIT = 100; // see anti-ban-warmup spec - "Daily volume ceiling enforcement"
 
@@ -23,6 +27,10 @@ async function main(): Promise<void> {
   if (!sessionId) {
     throw new Error('SESSION_ID environment variable is required (e.g. SESSION_ID=default-number)');
   }
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is required to run the reasoning engine');
+  }
+  const reasoningConfig = loadReasoningConfig();
 
   const warmupTracker = new WarmupTracker();
   const sessionManager = new SessionManager(undefined, warmupTracker);
@@ -46,6 +54,22 @@ async function main(): Promise<void> {
     },
     { gates: [warmupGate, dailyLimiter] },
   );
+
+  const conversationRepository = new FileConversationRepository();
+  const reasoningRepository = new ClaudeReasoningRepository(reasoningConfig);
+  const processIncomingMessage = new ProcessIncomingMessage(conversationRepository, reasoningRepository, (reply) =>
+    sendQueue.enqueue(reply),
+  );
+
+  session.on('message', (message) => {
+    processIncomingMessage
+      .execute(message.sessionId, message.from, message.text, message.timestamp)
+      .catch((error) => {
+        // Mirrors SendQueue's own failure handling: a single failed
+        // reasoning/reply attempt must not take down the process.
+        console.error(`Failed to process message from ${message.from}:`, error);
+      });
+  });
 
   console.log('Type "<numeroDestino> <texto>" to queue a test message (Ctrl+C to exit).');
   const rl = createInterface({ input: process.stdin });

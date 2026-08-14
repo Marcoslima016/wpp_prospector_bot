@@ -194,3 +194,90 @@ test('marks incoming messages as read, skipping messages sent by this session (p
 
   assert.deepEqual(ctx.sock.readMessagesCalls, [[incomingKey]]);
 });
+
+test('emits "message" for a one-to-one text message', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+
+  const received: unknown[] = [];
+  ctx.session.on('message', (message) => received.push(message));
+
+  const key = { remoteJid: '5511999999999@s.whatsapp.net', id: 'ABC', fromMe: false };
+  ctx.sock.ev.emit('messages.upsert', {
+    messages: [{ key, message: { conversation: 'oi' }, messageTimestamp: 1_700_000_000 }],
+    type: 'notify',
+  });
+
+  assert.deepEqual(received, [
+    {
+      sessionId: 'test-session',
+      from: '5511999999999@s.whatsapp.net',
+      text: 'oi',
+      timestamp: 1_700_000_000_000,
+    },
+  ]);
+});
+
+test('reads text from extendedTextMessage when "conversation" is absent', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+
+  const received: unknown[] = [];
+  ctx.session.on('message', (message) => received.push(message));
+
+  const key = { remoteJid: '5511999999999@s.whatsapp.net', id: 'ABC', fromMe: false };
+  ctx.sock.ev.emit('messages.upsert', {
+    messages: [{ key, message: { extendedTextMessage: { text: 'quoted reply' } } }],
+    type: 'notify',
+  });
+
+  assert.equal((received[0] as { text: string }).text, 'quoted reply');
+});
+
+test('does not emit "message" for a group chat', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+
+  const received: unknown[] = [];
+  ctx.session.on('message', (message) => received.push(message));
+
+  const key = { remoteJid: '123456789-987654321@g.us', id: 'ABC', fromMe: false };
+  ctx.sock.ev.emit('messages.upsert', {
+    messages: [{ key, message: { conversation: 'oi grupo' } }],
+    type: 'notify',
+  });
+
+  assert.deepEqual(received, []);
+});
+
+test('does not emit "message" for a message sent by this session itself', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+
+  const received: unknown[] = [];
+  ctx.session.on('message', (message) => received.push(message));
+
+  const key = { remoteJid: '5511999999999@s.whatsapp.net', id: 'DEF', fromMe: true };
+  ctx.sock.ev.emit('messages.upsert', {
+    messages: [{ key, message: { conversation: 'meu proprio envio' } }],
+    type: 'notify',
+  });
+
+  assert.deepEqual(received, []);
+});
+
+test('does not emit "message" for content without text (e.g. media without caption)', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+
+  const received: unknown[] = [];
+  ctx.session.on('message', (message) => received.push(message));
+
+  const key = { remoteJid: '5511999999999@s.whatsapp.net', id: 'ABC', fromMe: false };
+  ctx.sock.ev.emit('messages.upsert', {
+    messages: [{ key, message: { imageMessage: { caption: undefined } } }],
+    type: 'notify',
+  });
+
+  assert.deepEqual(received, []);
+});

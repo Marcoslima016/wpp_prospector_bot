@@ -3,7 +3,9 @@ import type { Boom } from '@hapi/boom';
 import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
+  isJidGroup,
   useMultiFileAuthState,
+  type WAMessage,
   type WAMessageKey,
   type WASocket,
 } from 'baileys';
@@ -17,10 +19,19 @@ export type SessionStatus =
   | 'ready'
   | 'disconnected';
 
+/** A one-to-one inbound message, already filtered of groups/self-sends - see toIncomingMessage(). */
+export interface IncomingWhatsAppMessage {
+  sessionId: string;
+  from: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface WhatsAppSessionEvents {
   qr: [qr: string];
   ready: [];
   disconnected: [reason: string];
+  message: [message: IncomingWhatsAppMessage];
 }
 
 const RECONNECT_BASE_DELAY_MS = 5_000;
@@ -142,7 +153,39 @@ export class WhatsAppSession extends EventEmitter {
       if (incomingKeys.length > 0) {
         void sock.readMessages(incomingKeys);
       }
+
+      for (const message of messages) {
+        const incoming = this.toIncomingMessage(message);
+        if (incoming) {
+          this.emit('message', incoming);
+        }
+      }
     });
+  }
+
+  /**
+   * Narrows a raw upsert entry down to the one-to-one, text-bearing messages
+   * the reasoning layer cares about - excludes group chats, this session's
+   * own sends, and non-text content (e.g. media without a caption).
+   */
+  private toIncomingMessage(message: WAMessage): IncomingWhatsAppMessage | undefined {
+    const remoteJid = message.key.remoteJid;
+    if (!remoteJid || message.key.fromMe || isJidGroup(remoteJid)) {
+      return undefined;
+    }
+
+    const text = message.message?.conversation ?? message.message?.extendedTextMessage?.text;
+    if (!text) {
+      return undefined;
+    }
+
+    const timestamp = Number(message.messageTimestamp ?? 0);
+    return {
+      sessionId: this.sessionId,
+      from: remoteJid,
+      text,
+      timestamp: timestamp > 0 ? timestamp * 1000 : Date.now(),
+    };
   }
 
   /**
