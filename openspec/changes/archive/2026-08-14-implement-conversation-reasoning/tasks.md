@@ -33,5 +33,5 @@
 ## 6. Verificação
 
 - [x] 6.1 Rodar a suíte automatizada completa (`npm test`) e confirmar que tudo passa — 49/49 testes passando
-- [ ] 6.2 QA manual: parear uma sessão real, mandar uma mensagem de teste de outro número para o número pareado, e confirmar que o bot responde de forma contextual; mandar uma segunda mensagem e confirmar que a resposta considera o histórico da primeira
-- [ ] 6.3 QA manual: reiniciar o processo entre as duas mensagens do teste acima e confirmar que o histórico da conversa (e portanto o contexto da resposta) sobrevive ao reinício
+- [x] 6.2 QA manual: parear uma sessão real, mandar uma mensagem de teste de outro número para o número pareado, e confirmar que o bot responde de forma contextual; mandar uma segunda mensagem e confirmar que a resposta considera o histórico da primeira
+- [x] 6.3 QA manual: reiniciar o processo entre as duas mensagens do teste acima e confirmar que o histórico da conversa (e portanto o contexto da resposta) sobrevive ao reinício
