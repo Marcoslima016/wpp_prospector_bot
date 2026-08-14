@@ -1,4 +1,5 @@
 import { WhatsAppSession } from './session';
+import { WarmupTracker } from '../warmup/warmupTracker';
 
 const DEFAULT_MAX_CONCURRENT_SESSIONS = 5;
 
@@ -18,9 +19,11 @@ export class MaxSessionsReachedError extends Error {
 export class SessionManager {
   private readonly sessions = new Map<string, WhatsAppSession>();
   private readonly maxConcurrentSessions: number;
+  private readonly warmupTracker?: WarmupTracker;
 
-  constructor(maxConcurrentSessions = DEFAULT_MAX_CONCURRENT_SESSIONS) {
+  constructor(maxConcurrentSessions = DEFAULT_MAX_CONCURRENT_SESSIONS, warmupTracker?: WarmupTracker) {
     this.maxConcurrentSessions = maxConcurrentSessions;
+    this.warmupTracker = warmupTracker;
   }
 
   async addSession(sessionId: string): Promise<WhatsAppSession> {
@@ -32,6 +35,13 @@ export class SessionManager {
     }
 
     const session = new WhatsAppSession(sessionId);
+    // recordActivation is idempotent (only writes on first activation), so
+    // it's safe to register this on every session without checking whether
+    // it's reconnecting rather than pairing for the first time.
+    const { warmupTracker } = this;
+    if (warmupTracker) {
+      session.on('ready', () => warmupTracker.recordActivation(sessionId));
+    }
     this.sessions.set(sessionId, session);
     await session.start();
     return session;
