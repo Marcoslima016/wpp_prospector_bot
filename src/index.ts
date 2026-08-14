@@ -1,4 +1,5 @@
 import { createInterface } from 'node:readline';
+import { config as loadEnv } from 'dotenv';
 import { SessionManager } from './whatsapp/sessionManager';
 import { WhatsAppSession } from './whatsapp/session';
 import { WarmupTracker } from './warmup/warmupTracker';
@@ -10,6 +11,8 @@ import { loadReasoningConfig } from './reasoning/infrastructure/reasoningConfig'
 import { ClaudeReasoningRepository } from './reasoning/infrastructure/claudeReasoningRepository';
 import { FileConversationRepository } from './reasoning/infrastructure/fileConversationRepository';
 import { ProcessIncomingMessage } from './reasoning/application/processIncomingMessage';
+
+loadEnv();
 
 const DAILY_VOLUME_LIMIT = 100; // see anti-ban-warmup spec - "Daily volume ceiling enforcement"
 
