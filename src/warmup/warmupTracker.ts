@@ -13,7 +13,7 @@ export class WarmupTracker {
   private readonly filePath: string;
   private readonly records: ActivationRecord;
 
-  constructor(filePath = '.wwebjs_auth/warmup-activations.json') {
+  constructor(filePath = '.baileys_auth/warmup-activations.json') {
     this.filePath = filePath;
     this.records = this.load();
   }

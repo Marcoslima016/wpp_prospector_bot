@@ -1,5 +1,13 @@
 import { EventEmitter } from 'node:events';
-import { Client, LocalAuth } from 'whatsapp-web.js';
+import type { Boom } from '@hapi/boom';
+import makeWASocket, {
+  DisconnectReason,
+  fetchLatestBaileysVersion,
+  useMultiFileAuthState,
+  type WAMessageKey,
+  type WASocket,
+} from 'baileys';
+import pino from 'pino';
 import qrcodeTerminal from 'qrcode-terminal';
 
 export type SessionStatus =
@@ -22,29 +30,58 @@ const MAX_TYPING_DELAY_MS = 6_000;
 const TYPING_MS_PER_CHAR = 60;
 
 /**
- * The subset of the whatsapp-web.js Client surface WhatsAppSession depends
- * on. Narrowing to this shape (rather than the full Client) is what lets
- * tests inject a fake client instead of a real, browser-backed one.
+ * The subset of the Baileys socket surface WhatsAppSession depends on.
+ * Narrowing to this shape (rather than the full WASocket) is what lets
+ * tests inject a fake socket instead of a real, WebSocket-backed one.
+ * Includes `readMessages` (beyond the connectivity primitives) because the
+ * anti-ban-warmup spec's presence-simulation requirement covers marking
+ * received messages as read, not just the "composing" indicator.
  */
-export type WhatsAppClientLike = Pick<
-  Client,
-  'on' | 'initialize' | 'destroy' | 'getChatById' | 'sendMessage' | 'sendSeen'
+export type BaileysSocketLike = Pick<
+  WASocket,
+  'ev' | 'sendMessage' | 'sendPresenceUpdate' | 'onWhatsApp' | 'readMessages' | 'logout' | 'end'
 >;
+
+/**
+ * Connects (or reconnects) a session's socket, loading/persisting its
+ * Baileys multi-device auth state along the way. Test seam: replaces the
+ * real makeWASocket(...)/useMultiFileAuthState(...) pairing with a fake
+ * socket factory, since makeWASocket is a plain function rather than a
+ * class that can be subclassed/injected directly.
+ */
+export type BaileysConnect = (authDataPath: string) => Promise<{
+  sock: BaileysSocketLike;
+  saveCreds: () => Promise<void>;
+}>;
 
 export interface WhatsAppSessionOptions {
   authDataPath?: string;
-  /** Test seam: inject a fake client instead of a real whatsapp-web.js Client. */
-  client?: WhatsAppClientLike;
+  /** Test seam: inject a fake socket factory instead of a real Baileys connection. */
+  connect?: BaileysConnect;
+}
+
+async function defaultConnect(authDataPath: string) {
+  const { state, saveCreds } = await useMultiFileAuthState(authDataPath);
+  const { version } = await fetchLatestBaileysVersion();
+  const sock = makeWASocket({
+    auth: state,
+    logger: pino({ level: 'silent' }),
+    version,
+  });
+  return { sock: sock as BaileysSocketLike, saveCreds };
 }
 
 /**
- * Wraps a single whatsapp-web.js Client, exposing session lifecycle as
- * events (qr / ready / disconnected) instead of leaking the underlying
- * client to callers.
+ * Wraps a single Baileys socket, exposing session lifecycle as events
+ * (qr / ready / disconnected) instead of leaking the underlying socket to
+ * callers.
  */
 export class WhatsAppSession extends EventEmitter {
   readonly sessionId: string;
-  protected readonly client: WhatsAppClientLike;
+  private readonly authDataPath: string;
+  private readonly connect: BaileysConnect;
+  private sock?: BaileysSocketLike;
+  private saveCreds?: () => Promise<void>;
   private status: SessionStatus = 'initializing';
   private stoppedIntentionally = false;
   private reconnectAttempts = 0;
@@ -53,46 +90,58 @@ export class WhatsAppSession extends EventEmitter {
   constructor(sessionId: string, options: WhatsAppSessionOptions = {}) {
     super();
     this.sessionId = sessionId;
-    this.client =
-      options.client ??
-      new Client({
-        authStrategy: new LocalAuth({
-          clientId: sessionId,
-          dataPath: options.authDataPath ?? '.wwebjs_auth',
-        }),
-      });
-    this.registerEventHandlers();
+    this.authDataPath = options.authDataPath ?? `.baileys_auth/${sessionId}`;
+    this.connect = options.connect ?? defaultConnect;
   }
 
-  private registerEventHandlers(): void {
-    this.client.on('qr', (qr) => {
-      this.status = 'qr_pending';
-      qrcodeTerminal.generate(qr, { small: true });
-      this.emit('qr', qr);
+  private async connectSocket(): Promise<void> {
+    const { sock, saveCreds } = await this.connect(this.authDataPath);
+    this.sock = sock;
+    this.saveCreds = saveCreds;
+    this.registerEventHandlers(sock);
+  }
+
+  private registerEventHandlers(sock: BaileysSocketLike): void {
+    sock.ev.on('creds.update', () => {
+      void this.saveCreds?.();
     });
 
-    this.client.on('authenticated', () => {
-      this.status = 'authenticated';
-    });
+    sock.ev.on('connection.update', (update) => {
+      const { connection, qr, lastDisconnect } = update;
 
-    this.client.on('ready', () => {
-      this.status = 'ready';
-      this.reconnectAttempts = 0;
-      this.emit('ready');
-    });
+      if (qr) {
+        this.status = 'qr_pending';
+        qrcodeTerminal.generate(qr, { small: true });
+        this.emit('qr', qr);
+      }
 
-    this.client.on('disconnected', (reason: string) => {
-      this.status = 'disconnected';
-      this.emit('disconnected', reason);
-      if (!this.stoppedIntentionally) {
-        this.scheduleReconnect();
+      if (connection === 'open') {
+        this.status = 'ready';
+        this.reconnectAttempts = 0;
+        this.emit('ready');
+      }
+
+      if (connection === 'close') {
+        this.status = 'disconnected';
+        const statusCode = (lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
+        this.emit('disconnected', statusCode !== undefined ? String(statusCode) : 'unknown');
+
+        const loggedOut = statusCode === DisconnectReason.loggedOut;
+        if (!loggedOut && !this.stoppedIntentionally) {
+          this.scheduleReconnect();
+        }
       }
     });
 
     // Presence simulation: mark incoming messages as read, the way a human
     // reading their chats would, instead of leaving them silently unread.
-    this.client.on('message', (message) => {
-      void this.client.sendSeen(message.from);
+    sock.ev.on('messages.upsert', ({ messages }) => {
+      const incomingKeys = messages
+        .map((message) => message.key)
+        .filter((key): key is WAMessageKey => Boolean(key && !key.fromMe));
+      if (incomingKeys.length > 0) {
+        void sock.readMessages(incomingKeys);
+      }
     });
   }
 
@@ -101,10 +150,24 @@ export class WhatsAppSession extends EventEmitter {
    * roughly to the message length, so the send doesn't appear instantly.
    */
   async sendMessage(to: string, text: string): Promise<void> {
-    const chat = await this.client.getChatById(to);
-    await chat.sendStateTyping();
+    if (!this.sock) {
+      throw new Error(`Session "${this.sessionId}" is not connected`);
+    }
+    const sock = this.sock;
+
+    // Resolve to WhatsApp's canonical JID first: a hand-built
+    // "<number>@s.whatsapp.net" string doesn't always match the account's
+    // real addressing (e.g. contacts resolved via the newer @lid scheme),
+    // which is what made sends fail systemically under the previous client.
+    const [result] = (await sock.onWhatsApp(to)) ?? [];
+    if (!result?.exists) {
+      throw new Error(`Number is not registered on WhatsApp: ${to}`);
+    }
+    const jid = result.jid;
+
+    await sock.sendPresenceUpdate('composing', jid);
     await this.delay(this.typingDelayFor(text));
-    await this.client.sendMessage(to, text);
+    await sock.sendMessage(jid, { text });
   }
 
   private typingDelayFor(text: string): number {
@@ -125,9 +188,10 @@ export class WhatsAppSession extends EventEmitter {
     );
     this.reconnectAttempts += 1;
     this.reconnectTimer = setTimeout(() => {
-      this.client.initialize().catch(() => {
-        // 'disconnected' fires again for the underlying client failure and
-        // re-schedules the next attempt, so a failed retry here is a no-op.
+      this.connectSocket().catch(() => {
+        // 'connection.update' fires again (via 'close') for the underlying
+        // socket failure and re-schedules the next attempt, so a failed
+        // retry here is a no-op.
       });
     }, delay);
   }
@@ -138,7 +202,7 @@ export class WhatsAppSession extends EventEmitter {
 
   async start(): Promise<void> {
     this.stoppedIntentionally = false;
-    await this.client.initialize();
+    await this.connectSocket();
   }
 
   async stop(): Promise<void> {
@@ -147,6 +211,6 @@ export class WhatsAppSession extends EventEmitter {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = undefined;
     }
-    await this.client.destroy();
+    this.sock?.end(undefined);
   }
 }

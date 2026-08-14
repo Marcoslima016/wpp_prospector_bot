@@ -16,7 +16,7 @@ export class DailyVolumeLimiter {
   private readonly dailyLimit: number;
   private state: LimiterState;
 
-  constructor(dailyLimit: number, filePath = '.wwebjs_auth/daily-volume.json') {
+  constructor(dailyLimit: number, filePath = '.baileys_auth/daily-volume.json') {
     this.dailyLimit = dailyLimit;
     this.filePath = filePath;
     this.state = this.load();

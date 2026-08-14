@@ -8,14 +8,12 @@ Estágio inicial. As decisões de arquitetura da camada de conectividade WhatsAp
 
 Pendências conhecidas:
 - Orquestração end-to-end (ligar fila de envio → rampa de aquecimento por número → sessão) ainda não foi implementada.
-- Pareamento real via QR code (task 4.1 do change acima) requer verificação manual com um celular físico — ainda não confirmado.
-- `npm audit` reporta vulnerabilidades de severidade alta herdadas da árvore de dependências do `whatsapp-web.js`/Puppeteer.
 
 ## Decisões-chave
 
 | Decisão | Valor | Detalhes |
 | :--- | :--- | :--- |
-| Conectividade WhatsApp | `whatsapp-web.js` (não-oficial, via QR code) | [design.md](openspec/changes/define-whatsapp-connection-strategy/design.md) |
+| Conectividade WhatsApp | `Baileys` (não-oficial, via QR code) | [design.md](openspec/changes/migrate-to-baileys/design.md) |
 | Meta de volume | 100 disparos/dia (definitiva, não é meta de MVP) | [proposal.md](openspec/changes/define-whatsapp-connection-strategy/proposal.md) |
 | Linguagem | TypeScript (Node.js) | — |
 
@@ -23,7 +21,7 @@ Pendências conhecidas:
 
 - **Runtime:** Node.js 20+ (desenvolvido e testado com Node 24)
 - **Linguagem:** TypeScript
-- **Conexão WhatsApp:** [whatsapp-web.js](https://github.com/pedroslopez/whatsapp-web.js) (Puppeteer por baixo dos panos)
+- **Conexão WhatsApp:** [Baileys](https://github.com/WhiskeySockets/Baileys) (WebSocket direto — sem navegador/Puppeteer)
 - **Testes:** runner nativo do Node (`node:test`)
 
 ## Como rodar
@@ -37,7 +35,7 @@ npm start               # roda a build compilada (dist/index.js)
 npm test                # compila e roda a suíte de testes automatizados
 ```
 
-O primeiro pareamento de um número WhatsApp exibe um QR code no terminal para ser escaneado pelo app do celular. As credenciais da sessão ficam persistidas em `.wwebjs_auth/` (não versionado) para não exigir novo QR code a cada reinício.
+O primeiro pareamento de um número WhatsApp exibe um QR code no terminal para ser escaneado pelo app do celular. As credenciais da sessão ficam persistidas em `.baileys_auth/` (não versionado) para não exigir novo QR code a cada reinício.
 
 ## Estrutura do projeto
 

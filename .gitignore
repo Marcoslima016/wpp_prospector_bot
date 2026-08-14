@@ -1,6 +1,5 @@
 node_modules/
 dist/
-.wwebjs_auth/
-.wwebjs_cache/
+.baileys_auth/
 *.log
 .DS_Store

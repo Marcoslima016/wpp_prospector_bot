@@ -1,107 +1,196 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { WhatsAppSession, type WhatsAppClientLike } from './session';
+import { Boom } from '@hapi/boom';
+import { DisconnectReason } from 'baileys';
+import { WhatsAppSession, type BaileysConnect, type BaileysSocketLike } from './session';
 
 /**
- * Stands in for a real whatsapp-web.js Client. A real pairing (scanning a
- * QR code with a phone) can't be exercised in an automated test - this
- * covers the session's own state-transition and reconnection logic instead.
+ * Stands in for a real Baileys socket. A real pairing (scanning a QR code
+ * with a phone) can't be exercised in an automated test - this covers the
+ * session's own state-transition, reconnection and presence logic instead.
  */
-class FakeClient extends EventEmitter {
-  initializeCalls = 0;
-  destroyCalls = 0;
+class FakeSocket {
+  readonly ev = new EventEmitter();
+  sendMessageCalls: { jid: string; content: unknown }[] = [];
+  presenceCalls: { type: string; jid: string | undefined }[] = [];
+  readMessagesCalls: unknown[][] = [];
+  endCalls = 0;
+  onWhatsAppResult: { jid: string; exists: unknown; lid: unknown }[] = [];
 
-  async initialize(): Promise<void> {
-    this.initializeCalls += 1;
+  async sendMessage(jid: string, content: unknown): Promise<undefined> {
+    this.sendMessageCalls.push({ jid, content });
+    return undefined;
   }
 
-  async destroy(): Promise<void> {
-    this.destroyCalls += 1;
+  async sendPresenceUpdate(type: string, jid?: string): Promise<void> {
+    this.presenceCalls.push({ type, jid });
   }
 
-  async getChatById(): Promise<never> {
-    throw new Error('not used in this test');
+  async onWhatsApp(..._jids: string[]) {
+    return this.onWhatsAppResult;
   }
 
-  async sendMessage(): Promise<never> {
-    throw new Error('not used in this test');
+  async readMessages(keys: unknown[]): Promise<void> {
+    this.readMessagesCalls.push(keys);
   }
 
-  async sendSeen(_chatId: string): Promise<boolean> {
-    return true;
+  async logout(): Promise<void> {}
+
+  end(_error: Error | undefined): void {
+    this.endCalls += 1;
   }
 }
 
+/**
+ * connectSocket() only invokes the injected factory once start() runs, so
+ * callers must await session.start() before reading `.sock` - it reflects
+ * whichever socket the most recent connect() call produced.
+ */
 function createSession() {
-  const fakeClient = new FakeClient();
-  const session = new WhatsAppSession('test-session', {
-    client: fakeClient as unknown as WhatsAppClientLike,
-  });
-  return { session, fakeClient };
+  const sockets: FakeSocket[] = [];
+  let saveCredsCalls = 0;
+
+  const connect: BaileysConnect = async () => {
+    const sock = new FakeSocket();
+    sockets.push(sock);
+    return {
+      sock: sock as unknown as BaileysSocketLike,
+      saveCreds: async () => {
+        saveCredsCalls += 1;
+      },
+    };
+  };
+
+  const session = new WhatsAppSession('test-session', { connect });
+  return {
+    session,
+    get sock() {
+      return sockets[sockets.length - 1]!;
+    },
+    get connectCalls() {
+      return sockets.length;
+    },
+    get saveCredsCalls() {
+      return saveCredsCalls;
+    },
+  };
 }
 
-test('transitions through qr -> authenticated -> ready', () => {
-  const { session, fakeClient } = createSession();
-  assert.equal(session.getStatus(), 'initializing');
+test('transitions through qr -> ready', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+  assert.equal(ctx.session.getStatus(), 'initializing');
 
-  fakeClient.emit('qr', 'fake-qr-data');
-  assert.equal(session.getStatus(), 'qr_pending');
+  ctx.sock.ev.emit('connection.update', { qr: 'fake-qr-data' });
+  assert.equal(ctx.session.getStatus(), 'qr_pending');
 
-  fakeClient.emit('authenticated');
-  assert.equal(session.getStatus(), 'authenticated');
-
-  fakeClient.emit('ready');
-  assert.equal(session.getStatus(), 'ready');
+  ctx.sock.ev.emit('connection.update', { connection: 'open' });
+  assert.equal(ctx.session.getStatus(), 'ready');
 });
 
-test('emits qr and ready events for callers to observe', () => {
-  const { session, fakeClient } = createSession();
+test('emits qr and ready events for callers to observe', async () => {
+  const ctx = createSession();
   let qrReceived: string | undefined;
   let readyFired = false;
-  session.on('qr', (qr: string) => (qrReceived = qr));
-  session.on('ready', () => (readyFired = true));
+  ctx.session.on('qr', (qr: string) => (qrReceived = qr));
+  ctx.session.on('ready', () => (readyFired = true));
 
-  fakeClient.emit('qr', 'fake-qr-data');
-  fakeClient.emit('ready');
+  await ctx.session.start();
+  ctx.sock.ev.emit('connection.update', { qr: 'fake-qr-data' });
+  ctx.sock.ev.emit('connection.update', { connection: 'open' });
 
   assert.equal(qrReceived, 'fake-qr-data');
   assert.equal(readyFired, true);
 });
 
 test('does not attempt to reconnect after an intentional stop', async () => {
-  const { session, fakeClient } = createSession();
-  await session.start();
-  assert.equal(fakeClient.initializeCalls, 1);
+  const ctx = createSession();
+  await ctx.session.start();
+  assert.equal(ctx.connectCalls, 1);
 
-  await session.stop();
-  assert.equal(fakeClient.destroyCalls, 1);
+  const sock = ctx.sock;
+  await ctx.session.stop();
+  assert.equal(sock.endCalls, 1);
 
-  fakeClient.emit('disconnected', 'LOGOUT');
-  assert.equal(session.getStatus(), 'disconnected');
-  assert.equal(fakeClient.initializeCalls, 1, 'should not re-initialize after an intentional stop');
+  sock.ev.emit('connection.update', { connection: 'close', lastDisconnect: { error: undefined, date: new Date() } });
+  assert.equal(ctx.session.getStatus(), 'disconnected');
+  assert.equal(ctx.connectCalls, 1, 'should not re-connect after an intentional stop');
 });
 
 test('schedules a reconnect attempt after an unexpected disconnect', (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
-  const { fakeClient } = createSession();
+  const ctx = createSession();
 
-  fakeClient.emit('disconnected', 'NAVIGATION');
-  assert.equal(fakeClient.initializeCalls, 0, 'should not reconnect immediately');
+  return ctx.session.start().then(() => {
+    ctx.sock.ev.emit('connection.update', {
+      connection: 'close',
+      lastDisconnect: { error: new Error('socket hiccup'), date: new Date() },
+    });
+    assert.equal(ctx.connectCalls, 1, 'should not reconnect immediately');
 
-  t.mock.timers.tick(5_000);
-  assert.equal(fakeClient.initializeCalls, 1, 'should retry after the backoff delay');
+    t.mock.timers.tick(5_000);
+    assert.equal(ctx.connectCalls, 2, 'should retry after the backoff delay');
+  });
 });
 
-test('marks incoming messages as seen (presence simulation)', () => {
-  const { fakeClient } = createSession();
-  let seenChatId: string | undefined;
-  fakeClient.sendSeen = async (chatId: string) => {
-    seenChatId = chatId;
-    return true;
-  };
+test('treats a logged-out disconnect as definitive and does not reconnect', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
 
-  fakeClient.emit('message', { from: '5511999999999@c.us' });
+  const loggedOutError = new Boom('logged out', { statusCode: DisconnectReason.loggedOut });
+  ctx.sock.ev.emit('connection.update', {
+    connection: 'close',
+    lastDisconnect: { error: loggedOutError, date: new Date() },
+  });
 
-  assert.equal(seenChatId, '5511999999999@c.us');
+  assert.equal(ctx.session.getStatus(), 'disconnected');
+  assert.equal(ctx.connectCalls, 1, 'should not reconnect once the account has logged the session out');
+});
+
+test('calls saveCreds() whenever the socket emits creds.update', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+
+  ctx.sock.ev.emit('creds.update', {});
+
+  assert.equal(ctx.saveCredsCalls, 1);
+});
+
+test('sendMessage resolves the WhatsApp JID before signaling presence and sending', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+  ctx.sock.onWhatsAppResult = [{ jid: '5511999999999@s.whatsapp.net', exists: true, lid: undefined }];
+
+  await ctx.session.sendMessage('5511999999999', 'oi');
+
+  assert.deepEqual(ctx.sock.presenceCalls, [{ type: 'composing', jid: '5511999999999@s.whatsapp.net' }]);
+  assert.deepEqual(ctx.sock.sendMessageCalls, [
+    { jid: '5511999999999@s.whatsapp.net', content: { text: 'oi' } },
+  ]);
+});
+
+test('sendMessage rejects a number that is not registered on WhatsApp', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+  ctx.sock.onWhatsAppResult = [];
+
+  await assert.rejects(() => ctx.session.sendMessage('0000000000', 'oi'), /not registered on WhatsApp/);
+});
+
+test('sendMessage rejects when the session has not been started yet', async () => {
+  const ctx = createSession();
+
+  await assert.rejects(() => ctx.session.sendMessage('5511999999999', 'oi'), /not connected/);
+});
+
+test('marks incoming messages as read, skipping messages sent by this session (presence simulation)', async () => {
+  const ctx = createSession();
+  await ctx.session.start();
+
+  const incomingKey = { remoteJid: '5511999999999@s.whatsapp.net', id: 'ABC', fromMe: false };
+  const ownKey = { remoteJid: '5511999999999@s.whatsapp.net', id: 'DEF', fromMe: true };
+  ctx.sock.ev.emit('messages.upsert', { messages: [{ key: incomingKey }, { key: ownKey }], type: 'notify' });
+
+  assert.deepEqual(ctx.sock.readMessagesCalls, [[incomingKey]]);
 });
