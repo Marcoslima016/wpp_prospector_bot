@@ -29,6 +29,7 @@ export interface IncomingWhatsAppMessage {
 
 export interface WhatsAppSessionEvents {
   qr: [qr: string];
+  pairing_code: [code: string];
   ready: [];
   disconnected: [reason: string];
   message: [message: IncomingWhatsAppMessage];
@@ -50,7 +51,15 @@ const TYPING_MS_PER_CHAR = 60;
  */
 export type BaileysSocketLike = Pick<
   WASocket,
-  'ev' | 'sendMessage' | 'sendPresenceUpdate' | 'onWhatsApp' | 'readMessages' | 'logout' | 'end'
+  | 'ev'
+  | 'sendMessage'
+  | 'sendPresenceUpdate'
+  | 'onWhatsApp'
+  | 'readMessages'
+  | 'logout'
+  | 'end'
+  | 'requestPairingCode'
+  | 'waitForSocketOpen'
 >;
 
 /**
@@ -63,12 +72,19 @@ export type BaileysSocketLike = Pick<
 export type BaileysConnect = (authDataPath: string) => Promise<{
   sock: BaileysSocketLike;
   saveCreds: () => Promise<void>;
+  /** Whether these auth credentials were already paired in a prior run. */
+  registered: boolean;
 }>;
 
 export interface WhatsAppSessionOptions {
   authDataPath?: string;
   /** Test seam: inject a fake socket factory instead of a real Baileys connection. */
   connect?: BaileysConnect;
+  /**
+   * Phone number (digits, country code, no "+"/spaces) to pair via pairing
+   * code instead of QR code. Ignored once the session is already registered.
+   */
+  pairingNumber?: string;
 }
 
 async function defaultConnect(authDataPath: string) {
@@ -79,7 +95,7 @@ async function defaultConnect(authDataPath: string) {
     logger: pino({ level: 'silent' }),
     version,
   });
-  return { sock: sock as BaileysSocketLike, saveCreds };
+  return { sock: sock as BaileysSocketLike, saveCreds, registered: state.creds.registered };
 }
 
 /**
@@ -91,25 +107,42 @@ export class WhatsAppSession extends EventEmitter {
   readonly sessionId: string;
   private readonly authDataPath: string;
   private readonly connect: BaileysConnect;
+  private readonly pairingNumber?: string;
   private sock?: BaileysSocketLike;
   private saveCreds?: () => Promise<void>;
   private status: SessionStatus = 'initializing';
   private stoppedIntentionally = false;
   private reconnectAttempts = 0;
   private reconnectTimer?: NodeJS.Timeout;
+  // WhatsApp closes the socket once a pairing code is issued and the code
+  // stays valid across the reconnects that follow while the operator enters
+  // it - so it must be requested at most once per unpaired session, not on
+  // every reconnect attempt (each request invalidates the previous code).
+  private pairingCodeRequested = false;
 
   constructor(sessionId: string, options: WhatsAppSessionOptions = {}) {
     super();
     this.sessionId = sessionId;
     this.authDataPath = options.authDataPath ?? `.baileys_auth/${sessionId}`;
     this.connect = options.connect ?? defaultConnect;
+    this.pairingNumber = options.pairingNumber;
   }
 
   private async connectSocket(): Promise<void> {
-    const { sock, saveCreds } = await this.connect(this.authDataPath);
+    const { sock, saveCreds, registered } = await this.connect(this.authDataPath);
     this.sock = sock;
     this.saveCreds = saveCreds;
     this.registerEventHandlers(sock);
+
+    if (this.pairingNumber && !registered && !this.pairingCodeRequested) {
+      this.pairingCodeRequested = true;
+      // The WebSocket handshake is still in flight right after connect()
+      // returns; requestPairingCode() sends a stanza immediately and fails
+      // with "Connection Closed" (428) if the socket isn't open yet.
+      await sock.waitForSocketOpen();
+      const code = await sock.requestPairingCode(this.pairingNumber);
+      this.emit('pairing_code', code);
+    }
   }
 
   private registerEventHandlers(sock: BaileysSocketLike): void {
@@ -134,8 +167,9 @@ export class WhatsAppSession extends EventEmitter {
 
       if (connection === 'close') {
         this.status = 'disconnected';
-        const statusCode = (lastDisconnect?.error as Boom | undefined)?.output?.statusCode;
-        this.emit('disconnected', statusCode !== undefined ? String(statusCode) : 'unknown');
+        const boomError = lastDisconnect?.error as Boom | undefined;
+        const statusCode = boomError?.output?.statusCode;
+        this.emit('disconnected', this.describeDisconnect(statusCode, boomError));
 
         const loggedOut = statusCode === DisconnectReason.loggedOut;
         if (!loggedOut && !this.stoppedIntentionally) {
@@ -161,6 +195,27 @@ export class WhatsAppSession extends EventEmitter {
         }
       }
     });
+  }
+
+  /**
+   * Builds a diagnostic string for an unexpected disconnect - includes the
+   * status code, the Boom message, and any server-sent payload (e.g. a
+   * WhatsApp `<failure reason="..." location="...">` stanza), since the bare
+   * status code alone isn't enough to tell a real error apart from routine
+   * reconnects.
+   */
+  private describeDisconnect(statusCode: number | undefined, boomError: Boom | undefined): string {
+    if (statusCode === undefined) {
+      return 'unknown';
+    }
+    const parts = [String(statusCode)];
+    if (boomError?.message) {
+      parts.push(boomError.message);
+    }
+    if (boomError?.data) {
+      parts.push(JSON.stringify(boomError.data));
+    }
+    return parts.join(' - ');
   }
 
   /**

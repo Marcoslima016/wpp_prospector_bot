@@ -17,6 +17,8 @@ class FakeSocket {
   readMessagesCalls: unknown[][] = [];
   endCalls = 0;
   onWhatsAppResult: { jid: string; exists: unknown; lid: unknown }[] = [];
+  pairingCodeRequests: string[] = [];
+  pairingCodeToReturn = 'ABCD1234';
 
   async sendMessage(jid: string, content: unknown): Promise<undefined> {
     this.sendMessageCalls.push({ jid, content });
@@ -40,6 +42,13 @@ class FakeSocket {
   end(_error: Error | undefined): void {
     this.endCalls += 1;
   }
+
+  async requestPairingCode(phoneNumber: string): Promise<string> {
+    this.pairingCodeRequests.push(phoneNumber);
+    return this.pairingCodeToReturn;
+  }
+
+  async waitForSocketOpen(): Promise<void> {}
 }
 
 /**
@@ -47,9 +56,10 @@ class FakeSocket {
  * callers must await session.start() before reading `.sock` - it reflects
  * whichever socket the most recent connect() call produced.
  */
-function createSession() {
+function createSession(options: { registered?: boolean; pairingNumber?: string } = {}) {
   const sockets: FakeSocket[] = [];
   let saveCredsCalls = 0;
+  const registered = options.registered ?? false;
 
   const connect: BaileysConnect = async () => {
     const sock = new FakeSocket();
@@ -59,10 +69,11 @@ function createSession() {
       saveCreds: async () => {
         saveCredsCalls += 1;
       },
+      registered,
     };
   };
 
-  const session = new WhatsAppSession('test-session', { connect });
+  const session = new WhatsAppSession('test-session', { connect, pairingNumber: options.pairingNumber });
   return {
     session,
     get sock() {
@@ -102,6 +113,85 @@ test('emits qr and ready events for callers to observe', async () => {
 
   assert.equal(qrReceived, 'fake-qr-data');
   assert.equal(readyFired, true);
+});
+
+test('requests a pairing code and emits it when a pairing number is configured for an unregistered session', async () => {
+  const ctx = createSession({ pairingNumber: '5511999999999', registered: false });
+  let pairingCodeReceived: string | undefined;
+  ctx.session.on('pairing_code', (code: string) => (pairingCodeReceived = code));
+
+  await ctx.session.start();
+
+  assert.deepEqual(ctx.sock.pairingCodeRequests, ['5511999999999']);
+  assert.equal(pairingCodeReceived, ctx.sock.pairingCodeToReturn);
+});
+
+test('does not request a pairing code when the session is already registered', async () => {
+  const ctx = createSession({ pairingNumber: '5511999999999', registered: true });
+
+  await ctx.session.start();
+
+  assert.deepEqual(ctx.sock.pairingCodeRequests, []);
+});
+
+test('does not request a pairing code when no pairing number is configured (QR flow unaffected)', async () => {
+  const ctx = createSession();
+  let qrReceived: string | undefined;
+  ctx.session.on('qr', (qr: string) => (qrReceived = qr));
+
+  await ctx.session.start();
+  ctx.sock.ev.emit('connection.update', { qr: 'fake-qr-data' });
+
+  assert.deepEqual(ctx.sock.pairingCodeRequests, []);
+  assert.equal(qrReceived, 'fake-qr-data');
+});
+
+test('describes an unexpected disconnect with statusCode, message, and any server-sent data', async () => {
+  const ctx = createSession();
+  let disconnectReason: string | undefined;
+  ctx.session.on('disconnected', (reason: string) => (disconnectReason = reason));
+  await ctx.session.start();
+
+  const error = new Boom('Connection Failure', { statusCode: 401, data: { reason: '401', location: 'atn' } });
+  ctx.sock.ev.emit('connection.update', { connection: 'close', lastDisconnect: { error, date: new Date() } });
+
+  assert.equal(disconnectReason, '401 - Connection Failure - {"reason":"401","location":"atn"}');
+});
+
+test('describes an unexpected disconnect as "unknown" when there is no status code', async () => {
+  const ctx = createSession();
+  let disconnectReason: string | undefined;
+  ctx.session.on('disconnected', (reason: string) => (disconnectReason = reason));
+  await ctx.session.start();
+
+  ctx.sock.ev.emit('connection.update', {
+    connection: 'close',
+    lastDisconnect: { error: undefined, date: new Date() },
+  });
+
+  assert.equal(disconnectReason, 'unknown');
+});
+
+test('does not request a new pairing code on reconnect while still unregistered', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const ctx = createSession({ pairingNumber: '5511999999999', registered: false });
+
+  await ctx.session.start();
+  assert.equal(ctx.sock.pairingCodeRequests.length, 1);
+
+  ctx.sock.ev.emit('connection.update', {
+    connection: 'close',
+    lastDisconnect: { error: new Error('socket hiccup'), date: new Date() },
+  });
+  t.mock.timers.tick(5_000);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(ctx.connectCalls, 2, 'should have reconnected');
+  assert.equal(
+    ctx.sock.pairingCodeRequests.length,
+    0,
+    'the new socket from the reconnect should not receive a new pairing code request',
+  );
 });
 
 test('does not attempt to reconnect after an intentional stop', async () => {

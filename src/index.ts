@@ -1,4 +1,4 @@
-import { createInterface } from 'node:readline';
+import { createInterface, type Interface } from 'node:readline';
 import { config as loadEnv } from 'dotenv';
 import { SessionManager } from './whatsapp/sessionManager';
 import { WhatsAppSession } from './whatsapp/session';
@@ -25,6 +25,30 @@ async function waitForReady(session: WhatsAppSession): Promise<void> {
   });
 }
 
+function ask(rl: Interface, question: string): Promise<string> {
+  return new Promise((resolve) => rl.question(question, (answer) => resolve(answer.trim())));
+}
+
+/**
+ * Lets the operator pick the pairing method for this run instead of baking
+ * it into an env var - QR code needs no phone number, pairing code does
+ * (falls back to WA_PAIRING_NUMBER from .env, or asks if that's unset too).
+ */
+async function promptPairingNumber(rl: Interface): Promise<string | undefined> {
+  const answer = await ask(
+    rl,
+    'Como parear esta sessão?\n  1) QR Code\n  2) Código de pareamento (número de telefone)\nEscolha (1/2) [1]: ',
+  );
+  if (answer !== '2') {
+    return undefined;
+  }
+  const envNumber = process.env.WA_PAIRING_NUMBER;
+  if (envNumber) {
+    return envNumber;
+  }
+  return ask(rl, 'Número de telefone (dígitos com DDI, sem "+"/espaços): ');
+}
+
 async function main(): Promise<void> {
   const sessionId = process.env.SESSION_ID;
   if (!sessionId) {
@@ -38,8 +62,21 @@ async function main(): Promise<void> {
   const warmupTracker = new WarmupTracker();
   const sessionManager = new SessionManager(undefined, warmupTracker);
 
-  console.log(`Pairing session "${sessionId}"... scan the QR code below with WhatsApp if prompted.`);
-  const session = await sessionManager.addSession(sessionId);
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const pairingNumber = await promptPairingNumber(rl);
+  console.log(
+    pairingNumber
+      ? `Pairing session "${sessionId}"... requesting a pairing code for ${pairingNumber}.`
+      : `Pairing session "${sessionId}"... scan the QR code below with WhatsApp if prompted.`,
+  );
+  const session = await sessionManager.addSession(sessionId, { pairingNumber }, (createdSession) => {
+    createdSession.on('pairing_code', (code) => {
+      console.log(`Pairing code for "${sessionId}": ${code}`);
+    });
+    createdSession.on('disconnected', (reason) => {
+      console.error(`Session "${sessionId}" disconnected: ${reason}`);
+    });
+  });
   await waitForReady(session);
   console.log(`Session "${sessionId}" is ready.`);
 
@@ -75,7 +112,6 @@ async function main(): Promise<void> {
   });
 
   console.log('Type "<numeroDestino> <texto>" to queue a test message (Ctrl+C to exit).');
-  const rl = createInterface({ input: process.stdin });
   rl.on('line', (line) => {
     const trimmed = line.trim();
     if (!trimmed) {

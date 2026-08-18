@@ -1,23 +1,10 @@
 {
   "version": "2.0.0",
-  "inputs": [
-    {
-      "id": "sessionId",
-      "type": "promptString",
-      "description": "Identificador da sessão do WhatsApp (ex.: numero-principal)",
-      "default": "default"
-    }
-  ],
   "tasks": [
     {
       "label": "WhatsApp: Iniciar sessão",
       "type": "shell",
       "command": "npm run dev",
-      "options": {
-        "env": {
-          "SESSION_ID": "${input:sessionId}"
-        }
-      },
       "isBackground": true,
       "problemMatcher": [],
       "presentation": {
@@ -25,7 +12,7 @@
         "panel": "new",
         "group": "whatsapp-sessions"
       },
-      "detail": "Compila e roda o bot pareando a sessão informada. Requer ANTHROPIC_API_KEY em .env (veja .env.example)."
+      "detail": "Compila e roda o bot pareando a sessão configurada em SESSION_ID no .env (veja .env.example)."
     }
   ]
 }

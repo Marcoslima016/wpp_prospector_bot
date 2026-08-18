@@ -1,4 +1,4 @@
-import { WhatsAppSession } from './session';
+import { WhatsAppSession, type WhatsAppSessionOptions } from './session';
 import { WarmupTracker } from '../warmup/warmupTracker';
 
 const DEFAULT_MAX_CONCURRENT_SESSIONS = 5;
@@ -26,7 +26,17 @@ export class SessionManager {
     this.warmupTracker = warmupTracker;
   }
 
-  async addSession(sessionId: string): Promise<WhatsAppSession> {
+  /**
+   * `onSessionCreated`, when given, fires synchronously right after the
+   * session is constructed and registered - before `start()` is awaited -
+   * so callers can attach listeners (e.g. for the `pairing_code` event)
+   * before the session has a chance to emit them.
+   */
+  async addSession(
+    sessionId: string,
+    options?: WhatsAppSessionOptions,
+    onSessionCreated?: (session: WhatsAppSession) => void,
+  ): Promise<WhatsAppSession> {
     if (this.sessions.has(sessionId)) {
       return this.sessions.get(sessionId)!;
     }
@@ -34,7 +44,7 @@ export class SessionManager {
       throw new MaxSessionsReachedError(this.maxConcurrentSessions);
     }
 
-    const session = new WhatsAppSession(sessionId);
+    const session = new WhatsAppSession(sessionId, options);
     // recordActivation is idempotent (only writes on first activation), so
     // it's safe to register this on every session without checking whether
     // it's reconnecting rather than pairing for the first time.
@@ -43,6 +53,7 @@ export class SessionManager {
       session.on('ready', () => warmupTracker.recordActivation(sessionId));
     }
     this.sessions.set(sessionId, session);
+    onSessionCreated?.(session);
     await session.start();
     return session;
   }
