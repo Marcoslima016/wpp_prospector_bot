@@ -72,7 +72,12 @@ export type BaileysSocketLike = Pick<
 export type BaileysConnect = (authDataPath: string) => Promise<{
   sock: BaileysSocketLike;
   saveCreds: () => Promise<void>;
-  /** Whether these auth credentials were already paired in a prior run. */
+  /**
+   * Whether these auth credentials were already paired in a prior run -
+   * true regardless of whether that pairing used QR or pairing code (see
+   * defaultConnect for why neither Baileys field alone is reliable across
+   * both methods).
+   */
   registered: boolean;
 }>;
 
@@ -90,12 +95,37 @@ export interface WhatsAppSessionOptions {
 async function defaultConnect(authDataPath: string) {
   const { state, saveCreds } = await useMultiFileAuthState(authDataPath);
   const { version } = await fetchLatestBaileysVersion();
+
+  // Baileys only sets creds.registered from the pairing-code flow's
+  // "companion_finish" step (messages-recv.js) - a session paired via QR
+  // never gets it set, even after a fully successful link. QR's own
+  // pair-success handler (configureSuccessfulPairing, in socket.js) does
+  // populate creds.account instead, so treat either as proof this session
+  // already completed a pairing, regardless of which method was used.
+  const registered = Boolean(state.creds.registered) || Boolean(state.creds.account);
+
+  if (!registered && state.creds.me) {
+    // requestPairingCode() sets creds.me speculatively - before the pairing
+    // actually succeeds - and it gets persisted via creds.update. WhatsApp
+    // closes the socket right after issuing a code, forcing the reconnect
+    // this session already does; on that reconnect, Baileys' handshake
+    // picks a registration vs. a login node based solely on whether
+    // creds.me is set (validate-connection.js). With the stale speculative
+    // value still on disk, it wrongly sends a login for a device that was
+    // never actually registered, and WhatsApp rejects it with
+    // `<failure reason="401">`. Clearing it here forces every retry to keep
+    // using the registration handshake until a pairing genuinely succeeds -
+    // matching how QR already behaves, since QR never sets creds.me before
+    // success in the first place.
+    delete state.creds.me;
+  }
+
   const sock = makeWASocket({
     auth: state,
     logger: pino({ level: 'silent' }),
     version,
   });
-  return { sock: sock as BaileysSocketLike, saveCreds, registered: state.creds.registered };
+  return { sock: sock as BaileysSocketLike, saveCreds, registered };
 }
 
 /**
