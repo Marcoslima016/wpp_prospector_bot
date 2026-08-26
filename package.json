@@ -1,0 +1,39 @@
+{
+  "name": "wpp_prospector_bot_server",
+  "version": "1.0.0",
+  "description": "Bot de WhatsApp para prospecção de clientes via WhatsApp Cloud API",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "node --watch --experimental-transform-types --env-file-if-exists=.env src/main.ts",
+    "build": "tsc",
+    "start": "node --env-file-if-exists=.env dist/main.js",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marcoslima016/wpp_prospector_bot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Marcoslima016/wpp_prospector_bot/issues"
+  },
+  "homepage": "https://github.com/Marcoslima016/wpp_prospector_bot#readme",
+  "dependencies": {
+    "fastify": "^5.12.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.3.0",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
+  }
+}
