@@ -63,6 +63,9 @@ export const registerWhatsappWebhookRoutes: FastifyPluginAsync<WhatsappWebhookRo
     });
 
     if (!isValid) {
+      deps.logger.warn("Assinatura de webhook ausente ou inválida — evento rejeitado", {
+        hasSignatureHeader: signatureHeader !== undefined,
+      });
       return reply.code(401).send();
     }
 

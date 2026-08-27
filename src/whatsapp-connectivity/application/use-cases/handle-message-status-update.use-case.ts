@@ -6,6 +6,7 @@ export interface RawMessageStatusUpdate {
   status: MessageStatus;
   timestamp: string;
   recipient_id: string;
+  errors?: Array<{ code?: number; title?: string; message?: string }>;
 }
 
 export class HandleMessageStatusUpdateUseCase {
@@ -22,6 +23,7 @@ export class HandleMessageStatusUpdateUseCase {
       status: statusUpdate.status,
       recipientId: raw.recipient_id,
       timestamp: new Date(Number(raw.timestamp) * 1000).toISOString(),
+      ...(raw.errors ? { errors: raw.errors } : {}),
     });
   }
 }

@@ -8,11 +8,18 @@ const webhookMessageSchema = z.object({
   text: z.object({ body: z.string() }).optional(),
 });
 
+const webhookStatusErrorSchema = z.object({
+  code: z.number().optional(),
+  title: z.string().optional(),
+  message: z.string().optional(),
+});
+
 const webhookStatusSchema = z.object({
   id: z.string(),
   status: z.enum(["sent", "delivered", "read", "failed"]),
   timestamp: z.string(),
   recipient_id: z.string(),
+  errors: z.array(webhookStatusErrorSchema).optional(),
 });
 
 const webhookChangeValueSchema = z.object({
