@@ -1,6 +1,7 @@
 import { HandleInboundMessageUseCase } from "./whatsapp-connectivity/application/use-cases/handle-inbound-message.use-case.ts";
 import { HandleMessageStatusUpdateUseCase } from "./whatsapp-connectivity/application/use-cases/handle-message-status-update.use-case.ts";
 import { SendOutboundMessageUseCase } from "./whatsapp-connectivity/application/use-cases/send-outbound-message.use-case.ts";
+import { SendTextMessageUseCase } from "./whatsapp-connectivity/application/use-cases/send-text-message.use-case.ts";
 import { loadEnv } from "./whatsapp-connectivity/infrastructure/config/env.ts";
 import { MetaCloudApiGateway } from "./whatsapp-connectivity/infrastructure/gateways/meta-cloud-api.gateway.ts";
 import { buildFastifyServer } from "./whatsapp-connectivity/infrastructure/http/fastify-server.ts";
@@ -17,6 +18,9 @@ const gateway = new MetaCloudApiGateway({
 // Exportado para uso manual (ex.: validação de QA do envio do template `hello_world`),
 // já que esta change ainda não expõe um gatilho HTTP para envio outbound.
 export const sendOutboundMessage = new SendOutboundMessageUseCase(gateway);
+// Exportado para uso manual (ex.: validação de QA do envio de texto livre dentro da
+// janela de 24h), já que esta change ainda não expõe um gatilho HTTP para envio outbound.
+export const sendTextMessage = new SendTextMessageUseCase(gateway);
 const handleInboundMessage = new HandleInboundMessageUseCase(logger);
 const handleMessageStatusUpdate = new HandleMessageStatusUpdateUseCase(logger);
 

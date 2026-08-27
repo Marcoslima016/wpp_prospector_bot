@@ -4,6 +4,7 @@ import type {
   WhatsAppGatewayPort,
 } from "../../application/ports/whatsapp-gateway.port.ts";
 import type { OutboundMessage } from "../../domain/outbound-message.ts";
+import type { OutboundTextMessage } from "../../domain/outbound-text-message.ts";
 
 const GRAPH_API_VERSION = "v21.0";
 
@@ -27,40 +28,58 @@ export class MetaCloudApiGateway implements WhatsAppGatewayPort {
   constructor(private readonly config: MetaCloudApiGatewayConfig) {}
 
   async sendTemplateMessage(message: OutboundMessage): Promise<SentMessage> {
+    const response = await this.postMessage({
+      messaging_product: "whatsapp",
+      to: message.to,
+      type: "template",
+      template: {
+        name: message.templateName,
+        language: { code: message.languageCode },
+        ...(message.parameters.length > 0
+          ? {
+              components: [
+                {
+                  type: "body",
+                  parameters: message.parameters.map((text) => ({ type: "text", text })),
+                },
+              ],
+            }
+          : {}),
+      },
+    });
+
+    return this.parseSendMessageResponse(response);
+  }
+
+  async sendTextMessage(message: OutboundTextMessage): Promise<SentMessage> {
+    const response = await this.postMessage({
+      messaging_product: "whatsapp",
+      to: message.to,
+      type: "text",
+      text: { body: message.body },
+    });
+
+    return this.parseSendMessageResponse(response);
+  }
+
+  private async postMessage(body: unknown): Promise<Response> {
     const url = `https://graph.facebook.com/${GRAPH_API_VERSION}/${this.config.phoneNumberId}/messages`;
 
-    let response: Response;
     try {
-      response = await fetch(url, {
+      return await fetch(url, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${this.config.accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to: message.to,
-          type: "template",
-          template: {
-            name: message.templateName,
-            language: { code: message.languageCode },
-            ...(message.parameters.length > 0
-              ? {
-                  components: [
-                    {
-                      type: "body",
-                      parameters: message.parameters.map((text) => ({ type: "text", text })),
-                    },
-                  ],
-                }
-              : {}),
-          },
-        }),
+        body: JSON.stringify(body),
       });
     } catch (cause) {
       throw new WhatsAppApiError("Falha de rede ao chamar a WhatsApp Cloud API", { cause });
     }
+  }
 
+  private async parseSendMessageResponse(response: Response): Promise<SentMessage> {
     const body: unknown = await response.json().catch(() => undefined);
 
     if (!response.ok) {

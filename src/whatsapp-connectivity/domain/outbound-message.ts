@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DomainValidationError } from "./errors.ts";
 
-const E164_REGEX = /^\+[1-9]\d{1,14}$/;
+export const E164_REGEX = /^\+[1-9]\d{1,14}$/;
 
 const outboundMessageSchema = z.object({
   to: z
