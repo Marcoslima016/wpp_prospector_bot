@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { InboundMessagePort } from "../ports/inbound-message.port.ts";
 import type { Logger } from "../ports/logger.port.ts";
 import { HandleInboundMessageUseCase } from "./handle-inbound-message.use-case.ts";
 
@@ -6,10 +7,15 @@ function fakeLogger(): Logger {
   return { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 }
 
+function fakePort(): InboundMessagePort {
+  return { receive: vi.fn() };
+}
+
 describe("HandleInboundMessageUseCase", () => {
-  it("normaliza e loga uma mensagem de texto recebida", () => {
+  it("normaliza, loga e encaminha ao port de processamento uma mensagem de texto recebida", () => {
     const logger = fakeLogger();
-    const useCase = new HandleInboundMessageUseCase(logger);
+    const port = fakePort();
+    const useCase = new HandleInboundMessageUseCase(logger, port);
 
     useCase.execute({
       from: "5511999999999",
@@ -27,12 +33,19 @@ describe("HandleInboundMessageUseCase", () => {
         text: "olá",
       }),
     );
+    expect(port.receive).toHaveBeenCalledWith({
+      from: "5511999999999",
+      messageId: "wamid.1",
+      text: "olá",
+      timestamp: new Date(1700000000 * 1000),
+    });
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it("loga e ignora, sem lançar, uma mensagem de tipo ainda não suportado", () => {
+  it("loga e ignora, sem lançar nem encaminhar, uma mensagem de tipo ainda não suportado", () => {
     const logger = fakeLogger();
-    const useCase = new HandleInboundMessageUseCase(logger);
+    const port = fakePort();
+    const useCase = new HandleInboundMessageUseCase(logger, port);
 
     expect(() =>
       useCase.execute({
@@ -48,5 +61,31 @@ describe("HandleInboundMessageUseCase", () => {
       expect.objectContaining({ messageId: "wamid.2", type: "image" }),
     );
     expect(logger.info).not.toHaveBeenCalled();
+    expect(port.receive).not.toHaveBeenCalled();
+  });
+
+  it("registra o erro e não quebra quando o port de processamento lança", () => {
+    const logger = fakeLogger();
+    const port: InboundMessagePort = {
+      receive: vi.fn(() => {
+        throw new Error("downstream indisponível");
+      }),
+    };
+    const useCase = new HandleInboundMessageUseCase(logger, port);
+
+    expect(() =>
+      useCase.execute({
+        from: "5511999999999",
+        id: "wamid.3",
+        timestamp: "1700000000",
+        type: "text",
+        text: { body: "oi" },
+      }),
+    ).not.toThrow();
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("encaminhar mensagem inbound"),
+      expect.objectContaining({ messageId: "wamid.3" }),
+    );
   });
 });

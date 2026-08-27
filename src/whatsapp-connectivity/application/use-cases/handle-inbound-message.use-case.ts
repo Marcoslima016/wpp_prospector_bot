@@ -1,4 +1,5 @@
 import { InboundMessage } from "../../domain/inbound-message.ts";
+import type { InboundMessagePort } from "../ports/inbound-message.port.ts";
 import type { Logger } from "../ports/logger.port.ts";
 
 export interface RawInboundMessage {
@@ -10,7 +11,10 @@ export interface RawInboundMessage {
 }
 
 export class HandleInboundMessageUseCase {
-  constructor(private readonly logger: Logger) {}
+  constructor(
+    private readonly logger: Logger,
+    private readonly inboundMessagePort: InboundMessagePort,
+  ) {}
 
   execute(raw: RawInboundMessage): void {
     if (raw.type !== "text" || !raw.text) {
@@ -34,5 +38,19 @@ export class HandleInboundMessageUseCase {
       text: message.text,
       timestamp: message.timestamp.toISOString(),
     });
+
+    try {
+      this.inboundMessagePort.receive({
+        from: message.from,
+        messageId: message.messageId,
+        text: message.text,
+        timestamp: message.timestamp,
+      });
+    } catch (error) {
+      this.logger.error("Falha ao encaminhar mensagem inbound ao processador downstream", {
+        messageId: message.messageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }
