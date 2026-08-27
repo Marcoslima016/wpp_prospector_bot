@@ -41,8 +41,8 @@
 
 ## 7. Validação manual (QA)
 
-- [ ] 7.1 Subir um túnel público (ex.: ngrok) apontando para o servidor local
-- [ ] 7.2 Configurar a Callback URL e o Verify Token no painel do Meta for Developers e confirmar o handshake de verificação
-- [ ] 7.3 Enviar o template `hello_world` via `SendOutboundMessageUseCase` para o número de teste e confirmar recebimento no celular
-- [ ] 7.4 Responder pelo celular e confirmar que o webhook recebe, valida a assinatura e loga a mensagem normalizada
-- [ ] 7.5 Confirmar que uma atualização de status (ex.: "delivered") é reconhecida e logada corretamente, sem ser confundida com mensagem recebida
+- [x] 7.1 Subir um túnel público (ex.: ngrok) apontando para o servidor local
+- [x] 7.2 Configurar a Callback URL e o Verify Token no painel do Meta for Developers e confirmar o handshake de verificação
+- [x] 7.3 Enviar o template `hello_world` via `SendOutboundMessageUseCase` para o número de teste e confirmar recebimento no celular
+- [x] 7.4 Responder pelo celular e confirmar que o webhook recebe, valida a assinatura e loga a mensagem normalizada
+- [x] 7.5 Confirmar que uma atualização de status (ex.: "delivered") é reconhecida e logada corretamente, sem ser confundida com mensagem recebida
