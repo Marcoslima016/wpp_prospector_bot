@@ -22,5 +22,5 @@
 ## 5. Validação
 
 - [x] 5.1 Rodar `npm test` e `npm run lint` — tudo verde
-- [ ] 5.2 QA manual: enviar uma mensagem de texto para o número de teste com a janela de 24h aberta (responder pelo celular antes) e confirmar recebimento no aparelho + retorno de `wamid`
+- [x] 5.2 QA manual: enviar uma mensagem de texto para o número de teste com a janela de 24h aberta (responder pelo celular antes) e confirmar recebimento no aparelho + retorno de `wamid`
 - [x] 5.3 Rodar `openspec validate add-session-text-messaging --strict` sem erros

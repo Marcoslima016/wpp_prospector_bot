@@ -17,6 +17,32 @@ O sistema SHALL enviar uma mensagem de template para um número de telefone via 
 - **WHEN** a Cloud API rejeita o envio (ex.: número inválido, template não aprovado, limite de tier excedido)
 - **THEN** o sistema propaga um erro identificável com a causa retornada pela API, sem lançar exceção não tratada
 
+### Requirement: Envio de Mensagem de Texto de Sessão
+
+O sistema SHALL enviar uma mensagem de texto livre para um número de telefone via WhatsApp Cloud API, dado o número de destino e o corpo textual da mensagem. O envio é válido apenas dentro da janela de atendimento de 24h do número de destino; o sistema não mantém o estado dessa janela e depende da Cloud API para rejeitar envios fora dela.
+
+O corpo da mensagem MUST ser não-vazio e MUST ter no máximo 4096 caracteres. O número de destino MUST estar no formato E.164.
+
+#### Scenario: Envio bem-sucedido
+
+- **WHEN** uma mensagem de texto com corpo válido é enviada para um número em formato E.164 com a janela de atendimento aberta
+- **THEN** o sistema retorna o identificador da mensagem (`wamid`) atribuído pela Cloud API
+
+#### Scenario: Falha reportada pela Cloud API
+
+- **WHEN** a Cloud API rejeita o envio (ex.: janela de atendimento fechada, número inválido, corpo recusado, limite de tier excedido)
+- **THEN** o sistema propaga um erro identificável com a causa retornada pela API, sem lançar exceção não tratada
+
+#### Scenario: Corpo de mensagem inválido
+
+- **WHEN** o corpo da mensagem é vazio ou excede 4096 caracteres
+- **THEN** o sistema rejeita o envio antes de chamar a Cloud API, com um erro de validação identificável
+
+#### Scenario: Número de destino em formato inválido
+
+- **WHEN** o número de destino não está no formato E.164
+- **THEN** o sistema rejeita o envio antes de chamar a Cloud API, com um erro de validação identificável
+
 ### Requirement: Verificação do Webhook
 O sistema SHALL responder ao handshake de verificação de webhook da Meta (requisição GET) validando o verify token configurado.
 
@@ -45,6 +71,20 @@ O sistema SHALL reconhecer eventos de webhook que representam uma mensagem receb
 #### Scenario: Mensagem de texto recebida
 - **WHEN** um evento de webhook contendo uma mensagem de texto de um lead é recebido e sua assinatura é válida
 - **THEN** o sistema extrai remetente, identificador da mensagem, texto e timestamp em um formato normalizado
+
+### Requirement: Encaminhamento de Mensagem Inbound para Processamento
+
+O sistema SHALL encaminhar cada mensagem inbound normalizada a um processador downstream por meio de uma interface desacoplada, além de continuar a registrá-la. O encaminhamento NÃO SHALL bloquear nem atrasar a confirmação HTTP 200 rápida à Meta (ver requirement "Confirmação Rápida de Recebimento").
+
+#### Scenario: Mensagem inbound encaminhada
+
+- **WHEN** uma mensagem de texto de um lead é recebida e sua assinatura é válida
+- **THEN** o sistema disponibiliza os dados normalizados (remetente, identificador, texto, timestamp) ao processador downstream configurado
+
+#### Scenario: Falha no processamento downstream
+
+- **WHEN** o processador downstream lança um erro ao receber a mensagem encaminhada
+- **THEN** o sistema registra o erro e continua operando normalmente, sem afetar a confirmação 200 já enviada nem o recebimento de eventos subsequentes
 
 ### Requirement: Recebimento de Atualização de Status
 O sistema SHALL reconhecer eventos de webhook que representam atualização de status de uma mensagem enviada anteriormente (enviada, entregue, lida ou falhou), distinguindo-os de eventos de mensagem recebida.

@@ -57,4 +57,4 @@
 
 - [x] 8.1 Rodar `npm test` e `npm run lint` — tudo verde
 - [x] 8.2 Rodar `openspec validate add-conversation-engine --strict` sem erros
-- [ ] 8.3 QA manual — responder pelo celular e confirmar resposta coerente do bot; enviar 3 mensagens em rajada sobre o mesmo assunto → 1 resposta; enviar mensagens sobre assuntos distintos → múltiplas respostas ordenadas; reenviar evento (dedup) → sem segunda resposta; encerrar o processo durante a janela e reiniciar → varredura de boot responde a pendência recente
+- [x] 8.3 QA manual — responder pelo celular e confirmar resposta coerente do bot; enviar 3 mensagens em rajada sobre o mesmo assunto → 1 resposta; enviar mensagens sobre assuntos distintos → múltiplas respostas ordenadas; reenviar evento (dedup) → sem segunda resposta; encerrar o processo durante a janela e reiniciar → varredura de boot responde a pendência recente
