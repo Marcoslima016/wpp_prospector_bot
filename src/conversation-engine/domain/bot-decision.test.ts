@@ -76,4 +76,23 @@ describe("BotDecision.create", () => {
     ]);
     expect(BOT_DECISION_JSON_SCHEMA.additionalProperties).toBe(false);
   });
+
+  it("usa apenas o subconjunto de JSON Schema aceito pela Anthropic (sem type-array, sem minLength/maxLength)", () => {
+    const serialized = JSON.stringify(BOT_DECISION_JSON_SCHEMA);
+
+    // `type` nunca deve ser um array (nullable é expresso via anyOf + {type:"null"})
+    expect(serialized).not.toMatch(/"type"\s*:\s*\[/);
+    expect(serialized).not.toContain("minLength");
+    expect(serialized).not.toContain("maxLength");
+
+    // campos nullable expressos via anyOf
+    expect(BOT_DECISION_JSON_SCHEMA.properties.leadQualification).toEqual({
+      anyOf: [{ type: "string", enum: ["hot", "warm", "cold"] }, { type: "null" }],
+      description: expect.any(String),
+    });
+    expect(BOT_DECISION_JSON_SCHEMA.properties.reasoning).toEqual({
+      anyOf: [{ type: "string" }, { type: "null" }],
+      description: expect.any(String),
+    });
+  });
 });

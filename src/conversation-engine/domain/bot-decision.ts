@@ -19,6 +19,11 @@ export type BotDecisionInput = z.input<typeof botDecisionSchema>;
  * da chamada estruturada ao LLM (`output_config.format`). Mantido em sincronia
  * manual com o schema zod acima — a validação real da saída é feita por
  * `BotDecision.create`.
+ *
+ * Restrições do subconjunto aceito pela Anthropic em `output_config.format`:
+ * sem `type` em array (nullable via `anyOf` + `{ type: "null" }`), sem
+ * `minLength`/`maxLength`, `additionalProperties` deve ser `false`, todos os
+ * campos em `required`.
  */
 export const BOT_DECISION_JSON_SCHEMA = {
   type: "object",
@@ -26,11 +31,11 @@ export const BOT_DECISION_JSON_SCHEMA = {
   properties: {
     replyMessages: {
       type: "array",
-      items: { type: "string", minLength: 1 },
+      items: { type: "string" },
       description:
         "Mensagens de resposta na ordem de envio. Lista vazia significa não responder. " +
         "Use uma única mensagem quando o lead trata de um só assunto; use várias apenas " +
-        "quando pontos distintos exigem respostas separadas.",
+        "quando pontos distintos exigem respostas separadas. Cada item deve ser não-vazio.",
     },
     endConversation: {
       type: "boolean",
@@ -42,8 +47,7 @@ export const BOT_DECISION_JSON_SCHEMA = {
       description: "Intenção identificada do lead nas mensagens interpretadas.",
     },
     leadQualification: {
-      type: ["string", "null"],
-      enum: [...LEAD_QUALIFICATIONS, null],
+      anyOf: [{ type: "string", enum: [...LEAD_QUALIFICATIONS] }, { type: "null" }],
       description: "Qualificação comercial do lead, ou null quando ainda não é possível qualificar.",
     },
     handoffToHuman: {
@@ -51,7 +55,7 @@ export const BOT_DECISION_JSON_SCHEMA = {
       description: "true quando a conversa deve ser transferida para atendimento humano.",
     },
     reasoning: {
-      type: ["string", "null"],
+      anyOf: [{ type: "string" }, { type: "null" }],
       description: "Justificativa interna da decisão. NUNCA é enviada ao lead.",
     },
   },
