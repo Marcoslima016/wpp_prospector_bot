@@ -46,7 +46,12 @@ export class ReplySenderAdapter implements ReplySenderPort {
       this.logger.error("Falha ao enviar mensagem de resposta ao lead após a tentativa adicional", {
         to,
         error: error instanceof Error ? error.message : String(error),
+        ...(isWithCode(error) && error.code !== undefined ? { code: error.code } : {}),
       });
     }
   }
+}
+
+function isWithCode(error: unknown): error is { code?: string } {
+  return typeof error === "object" && error !== null && "code" in error;
 }
