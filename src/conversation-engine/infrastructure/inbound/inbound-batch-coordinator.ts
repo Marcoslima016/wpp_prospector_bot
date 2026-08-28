@@ -5,6 +5,7 @@ import type {
 import type { ConversationRepositoryPort } from "../../application/ports/conversation-repository.port.ts";
 import type { Logger } from "../../application/ports/logger.port.ts";
 import { Conversation } from "../../domain/conversation.ts";
+import { toE164LeadPhone } from "../../domain/lead-phone.ts";
 
 export interface GenerateReplyPort {
   execute(leadPhone: string, messageIds: string[]): Promise<void>;
@@ -41,13 +42,15 @@ export class InboundBatchCoordinator implements InboundMessagePort {
   }
 
   receive(message: InboundMessageDto): void {
-    this.enqueue(message.from, async () => {
+    const leadPhone = toE164LeadPhone(message.from);
+
+    this.enqueue(leadPhone, async () => {
       const conversation =
-        (await this.repository.load(message.from)) ?? Conversation.createNew(message.from);
+        (await this.repository.load(leadPhone)) ?? Conversation.createNew(leadPhone);
 
       if (conversation.hasProcessed(message.messageId)) {
         this.logger.info("Mensagem inbound duplicada ignorada", {
-          leadPhone: message.from,
+          leadPhone,
           messageId: message.messageId,
         });
         return;
@@ -63,19 +66,20 @@ export class InboundBatchCoordinator implements InboundMessagePort {
       if (!conversation.acceptsAutomatedReplies) {
         this.logger.info(
           "Conversa aguardando atendimento humano — inbound registrado sem agendar resposta",
-          { leadPhone: message.from, messageId: message.messageId },
+          { leadPhone, messageId: message.messageId },
         );
         return;
       }
 
-      this.bufferAndSchedule(message.from, message.messageId);
+      this.bufferAndSchedule(leadPhone, message.messageId);
     });
   }
 
   /** Reenfileira um lote pendente para processamento imediato (usado na varredura de boot). */
   enqueuePendingBatch(leadPhone: string, messageIds: string[]): void {
     if (messageIds.length === 0) return;
-    this.enqueue(leadPhone, () => this.generateReply.execute(leadPhone, messageIds));
+    const normalized = toE164LeadPhone(leadPhone);
+    this.enqueue(normalized, () => this.generateReply.execute(normalized, messageIds));
   }
 
   /** Aguarda o esvaziamento da fila serial de todos os leads (auxiliar de teste/shutdown). */

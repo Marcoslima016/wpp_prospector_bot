@@ -70,6 +70,23 @@ afterEach(() => {
 });
 
 describe("InboundBatchCoordinator", () => {
+  it("normaliza o telefone do lead para E.164 (webhook envia sem `+`)", async () => {
+    coordinator.receive({
+      from: "5516991166257",
+      messageId: "wamid.1",
+      text: "oi",
+      timestamp: new Date("2026-08-28T12:00:00.000Z"),
+    });
+    await coordinator.whenSettled();
+    await vi.advanceTimersByTimeAsync(WINDOW);
+    await coordinator.whenSettled();
+
+    expect(generateReply.calls).toEqual([
+      { leadPhone: "+5516991166257", messageIds: ["wamid.1"] },
+    ]);
+    expect(repo.store.has("+5516991166257")).toBe(true);
+  });
+
   it("agrupa mensagens recebidas dentro da janela em uma única execução", async () => {
     coordinator.receive(dto("wamid.1"));
     coordinator.receive(dto("wamid.2"));
