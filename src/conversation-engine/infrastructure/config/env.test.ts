@@ -36,6 +36,18 @@ describe("loadConversationEngineEnv", () => {
     expect(env.BOOT_SWEEP_MAX_AGE_MS).toBe(60000);
   });
 
+  it("não inclui ANTHROPIC_WORKSPACE_ID quando não informado", () => {
+    const env = loadConversationEngineEnv(validSource);
+
+    expect(env.ANTHROPIC_WORKSPACE_ID).toBeUndefined();
+  });
+
+  it("aceita ANTHROPIC_WORKSPACE_ID quando informado", () => {
+    const env = loadConversationEngineEnv({ ...validSource, ANTHROPIC_WORKSPACE_ID: "wrkspc_123" });
+
+    expect(env.ANTHROPIC_WORKSPACE_ID).toBe("wrkspc_123");
+  });
+
   it("falha com mensagem clara quando ANTHROPIC_API_KEY está ausente", () => {
     expect(() => loadConversationEngineEnv({})).toThrow(/ANTHROPIC_API_KEY é obrigatório/);
   });

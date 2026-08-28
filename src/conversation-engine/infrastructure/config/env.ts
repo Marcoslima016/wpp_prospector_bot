@@ -4,6 +4,9 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z
     .string({ error: "ANTHROPIC_API_KEY é obrigatório" })
     .min(1, "ANTHROPIC_API_KEY é obrigatório"),
+  // Obrigatório apenas quando a API key é vinculada à identidade (não a um
+  // workspace). A Anthropic responde 400 pedindo o header `anthropic-workspace-id`.
+  ANTHROPIC_WORKSPACE_ID: z.string().min(1).optional(),
   LLM_MODEL: z.string().min(1).default("claude-sonnet-5"),
   CONVERSATION_BATCH_WINDOW_MS: z.coerce.number().int().positive().default(8000),
   CONVERSATION_HISTORY_TURNS: z.coerce.number().int().positive().default(20),

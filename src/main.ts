@@ -45,7 +45,10 @@ const replyStrategy = new ReplyStrategy({
   model: conversationEnv.LLM_MODEL,
   historyTurns: conversationEnv.CONVERSATION_HISTORY_TURNS,
 });
-const llmClient = new AnthropicLlmClient({ apiKey: conversationEnv.ANTHROPIC_API_KEY });
+const llmClient = new AnthropicLlmClient({
+  apiKey: conversationEnv.ANTHROPIC_API_KEY,
+  workspaceId: conversationEnv.ANTHROPIC_WORKSPACE_ID,
+});
 const conversationRepository = new FileConversationRepository(conversationEnv.CONVERSATIONS_DIR);
 const replySender = new ReplySenderAdapter({ sendTextMessage, logger });
 

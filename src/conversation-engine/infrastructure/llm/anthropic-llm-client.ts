@@ -8,6 +8,11 @@ import type {
 
 export interface AnthropicLlmClientConfig {
   apiKey: string;
+  /**
+   * Id do workspace. Necessário quando a API key é vinculada à identidade —
+   * enviado no header `anthropic-workspace-id`.
+   */
+  workspaceId?: string;
   /** Cliente já construído — usado nos testes com um SDK mockado. */
   client?: Anthropic;
 }
@@ -17,7 +22,14 @@ export class AnthropicLlmClient implements LlmClientPort {
   private readonly client: Anthropic;
 
   constructor(config: AnthropicLlmClientConfig) {
-    this.client = config.client ?? new Anthropic({ apiKey: config.apiKey });
+    this.client =
+      config.client ??
+      new Anthropic({
+        apiKey: config.apiKey,
+        ...(config.workspaceId
+          ? { defaultHeaders: { "anthropic-workspace-id": config.workspaceId } }
+          : {}),
+      });
   }
 
   async generate(request: LlmRequest): Promise<LlmResponse> {

@@ -49,6 +49,22 @@ describe("AnthropicLlmClient.generate", () => {
     await expect(clientWith(create).generate(request)).rejects.toBeInstanceOf(LlmClientError);
   });
 
+  it("envia o header anthropic-workspace-id quando workspaceId é informado", () => {
+    const adapter = new AnthropicLlmClient({ apiKey: "sk-ant-test", workspaceId: "wrkspc_123" });
+
+    const options = (adapter as unknown as { client: { _options: { defaultHeaders?: unknown } } })
+      .client._options;
+    expect(options.defaultHeaders).toEqual({ "anthropic-workspace-id": "wrkspc_123" });
+  });
+
+  it("não define defaultHeaders quando workspaceId não é informado", () => {
+    const adapter = new AnthropicLlmClient({ apiKey: "sk-ant-test" });
+
+    const options = (adapter as unknown as { client: { _options: { defaultHeaders?: unknown } } })
+      .client._options;
+    expect(options.defaultHeaders).toBeUndefined();
+  });
+
   it("omite output_config quando não há responseSchema", async () => {
     const create = vi.fn().mockResolvedValue({ content: [{ type: "text", text: "oi" }] });
 
