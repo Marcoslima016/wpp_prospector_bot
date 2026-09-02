@@ -131,8 +131,12 @@ runner duas vezes é idempotente e que uma migration inválida lança.
 
 ## Open Questions
 
-- Versão mínima exata do Node a fixar em `engines` e se a flag `--experimental-sqlite` é
-  necessária nela — verificar no ambiente alvo antes de escrever a task de config. Não afeta
-  specs nem o desenho.
-- `shared/persistence/sqlite/` vs `src/platform/` como nome do diretório transversal —
-  cosmético, decidir na implementação.
+- ~~Versão mínima do Node e necessidade da flag `--experimental-sqlite`.~~ **Resolvido na
+  implementação:** o ambiente de dev roda Node 24.1.0, onde `process.getBuiltinModule("node:sqlite")`
+  devolve o módulo **sem flag** (apenas um `ExperimentalWarning`). Fixado `engines.node >= 24.0.0`
+  no `package.json`; nenhuma flag adicionada aos scripts. O carregamento passa por
+  `process.getBuiltinModule` (não `require`, barrado pelo lint) e lança `SqliteUnavailableError`
+  com mensagem acionável se o módulo não vier — cobre o caso de um runtime sem `node:sqlite`
+  sem precisar de teste de fumaça dedicado.
+- ~~`shared/persistence/sqlite/` vs `src/platform/`.~~ **Resolvido:** `src/shared/persistence/sqlite/`
+  (novo diretório `src/shared/`), conforme D3.

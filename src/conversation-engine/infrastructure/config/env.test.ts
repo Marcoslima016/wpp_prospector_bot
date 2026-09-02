@@ -16,6 +16,7 @@ describe("loadConversationEngineEnv", () => {
       CONVERSATION_BATCH_WINDOW_MS: 8000,
       CONVERSATION_HISTORY_TURNS: 20,
       CONVERSATIONS_DIR: "./data/conversations",
+      DATABASE_PATH: "./data/app.db",
       BOOT_SWEEP_MAX_AGE_MS: 3600000,
       KNOWLEDGE_DIR: "./src/conversation-engine/infrastructure/knowledge",
       RETRIEVAL_TOP_K: 6,
@@ -31,6 +32,7 @@ describe("loadConversationEngineEnv", () => {
       CONVERSATION_BATCH_WINDOW_MS: "5000",
       CONVERSATION_HISTORY_TURNS: "10",
       CONVERSATIONS_DIR: "/var/data/conversas",
+      DATABASE_PATH: "/var/data/app.db",
       BOOT_SWEEP_MAX_AGE_MS: "60000",
       KNOWLEDGE_DIR: "/opt/knowledge",
       RETRIEVAL_TOP_K: "10",
@@ -42,6 +44,7 @@ describe("loadConversationEngineEnv", () => {
     expect(env.CONVERSATION_BATCH_WINDOW_MS).toBe(5000);
     expect(env.CONVERSATION_HISTORY_TURNS).toBe(10);
     expect(env.CONVERSATIONS_DIR).toBe("/var/data/conversas");
+    expect(env.DATABASE_PATH).toBe("/var/data/app.db");
     expect(env.BOOT_SWEEP_MAX_AGE_MS).toBe(60000);
     expect(env.KNOWLEDGE_DIR).toBe("/opt/knowledge");
     expect(env.RETRIEVAL_TOP_K).toBe(10);

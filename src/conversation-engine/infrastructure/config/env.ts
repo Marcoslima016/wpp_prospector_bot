@@ -14,6 +14,10 @@ const envSchema = z.object({
   CONVERSATION_BATCH_WINDOW_MS: z.coerce.number().int().positive().default(8000),
   CONVERSATION_HISTORY_TURNS: z.coerce.number().int().positive().default(20),
   CONVERSATIONS_DIR: z.string().min(1).default("./data/conversations"),
+  // Arquivo do armazenamento SQL embutido (node:sqlite). Dados operacionais e
+  // analíticos + índices derivados — NÃO substitui o repositório de conversas em
+  // arquivo. No modo WAL, gera também `-wal`/`-shm` ao lado.
+  DATABASE_PATH: z.string().min(1).default("./data/app.db"),
   BOOT_SWEEP_MAX_AGE_MS: z.coerce.number().int().positive().default(3600000),
   // Base de conhecimento comercial (sales-knowledge.md + pricing.md).
   KNOWLEDGE_DIR: z.string().min(1).default("./src/conversation-engine/infrastructure/knowledge"),

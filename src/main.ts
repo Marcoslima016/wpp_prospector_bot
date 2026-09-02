@@ -11,6 +11,7 @@ import { AnthropicLlmClient } from "./conversation-engine/infrastructure/llm/ant
 import { FileConversationRepository } from "./conversation-engine/infrastructure/persistence/file-conversation-repository.ts";
 import { ReplySenderAdapter } from "./conversation-engine/infrastructure/sending/reply-sender.adapter.ts";
 import { ReplyStrategy } from "./conversation-engine/domain/reply-strategy.ts";
+import { openDatabase } from "./shared/persistence/sqlite/open-database.ts";
 import { HandleInboundMessageUseCase } from "./whatsapp-connectivity/application/use-cases/handle-inbound-message.use-case.ts";
 import { HandleMessageStatusUpdateUseCase } from "./whatsapp-connectivity/application/use-cases/handle-message-status-update.use-case.ts";
 import { SendOutboundMessageUseCase } from "./whatsapp-connectivity/application/use-cases/send-outbound-message.use-case.ts";
@@ -73,6 +74,24 @@ try {
   process.exit(1);
 }
 
+// Armazenamento SQL embutido (node:sqlite): preparado no boot, antes de montar
+// os use-cases e antes do `app.listen`. Fail-fast — se abrir o banco ou aplicar
+// uma migration falhar, o processo não sobe. A conexão fica disponível para
+// injeção nos adapters das próximas changes; nenhuma consome nesta change.
+let database: ReturnType<typeof openDatabase>;
+try {
+  database = openDatabase(conversationEnv.DATABASE_PATH);
+  logger.info("Armazenamento SQL embutido preparado", {
+    path: conversationEnv.DATABASE_PATH,
+  });
+} catch (error) {
+  console.error(
+    "Falha ao preparar o armazenamento SQL embutido — abortando a inicialização",
+    error,
+  );
+  process.exit(1);
+}
+
 const businessContextProvider = new LexicalRetrievalBusinessContext({
   llmClient,
   index: knowledge.index,
@@ -85,6 +104,11 @@ const businessContextProvider = new LexicalRetrievalBusinessContext({
 
 const conversationRepository = new FileConversationRepository(conversationEnv.CONVERSATIONS_DIR);
 const replySender = new ReplySenderAdapter({ sendTextMessage, logger });
+
+// Conexão única do armazenamento SQL embutido, exposta para os adapters que
+// persistem dados estruturados nas próximas changes (consumo de LLM/WhatsApp,
+// projeção de leitura de conversas). Nenhum adapter a consome nesta change.
+export { database };
 
 const generateReply = new GenerateReplyUseCase({
   repository: conversationRepository,
