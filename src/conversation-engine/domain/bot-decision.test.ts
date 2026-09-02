@@ -42,27 +42,60 @@ describe("BotDecision.create", () => {
   });
 
   it("rejeita leadIntent fora do conjunto permitido", () => {
-    expect(() =>
-      BotDecision.create({ ...base, leadIntent: "curioso" as never }),
-    ).toThrow(DomainValidationError);
+    expect(() => BotDecision.create({ ...base, leadIntent: "curioso" as never })).toThrow(
+      DomainValidationError,
+    );
   });
 
   it("rejeita leadQualification fora do conjunto permitido", () => {
-    expect(() =>
-      BotDecision.create({ ...base, leadQualification: "morno" as never }),
-    ).toThrow(DomainValidationError);
+    expect(() => BotDecision.create({ ...base, leadQualification: "morno" as never })).toThrow(
+      DomainValidationError,
+    );
   });
 
   it("rejeita tipos errados nos campos booleanos", () => {
-    expect(() =>
-      BotDecision.create({ ...base, endConversation: "sim" as never }),
-    ).toThrow(DomainValidationError);
+    expect(() => BotDecision.create({ ...base, endConversation: "sim" as never })).toThrow(
+      DomainValidationError,
+    );
   });
 
   it("rejeita mensagens de resposta vazias", () => {
+    expect(() => BotDecision.create({ ...base, replyMessages: [""] })).toThrow(
+      DomainValidationError,
+    );
+  });
+
+  it("aplica defaults retrocompatíveis para os campos de módulos/plano quando ausentes", () => {
+    const decision = BotDecision.create({ ...base });
+
+    expect(decision.recommendedModules).toEqual([]);
+    expect(decision.interestedModules).toEqual([]);
+    expect(decision.quotedPlan).toBeNull();
+  });
+
+  it("aceita módulos ofertados/de interesse e o plano citado", () => {
+    const decision = BotDecision.create({
+      ...base,
+      recommendedModules: ["gestao-obras", "obra360"],
+      interestedModules: ["gestao-obras"],
+      quotedPlan: "essencial",
+    });
+
+    expect(decision.recommendedModules).toEqual(["gestao-obras", "obra360"]);
+    expect(decision.interestedModules).toEqual(["gestao-obras"]);
+    expect(decision.quotedPlan).toBe("essencial");
+  });
+
+  it("rejeita id de módulo fora do catálogo", () => {
     expect(() =>
-      BotDecision.create({ ...base, replyMessages: [""] }),
+      BotDecision.create({ ...base, recommendedModules: ["modulo-inexistente" as never] }),
     ).toThrow(DomainValidationError);
+  });
+
+  it("rejeita quotedPlan fora do conjunto permitido", () => {
+    expect(() => BotDecision.create({ ...base, quotedPlan: "completo" as never })).toThrow(
+      DomainValidationError,
+    );
   });
 
   it("expõe um JSON Schema com todos os campos obrigatórios", () => {
@@ -73,6 +106,9 @@ describe("BotDecision.create", () => {
       "leadQualification",
       "handoffToHuman",
       "reasoning",
+      "recommendedModules",
+      "interestedModules",
+      "quotedPlan",
     ]);
     expect(BOT_DECISION_JSON_SCHEMA.additionalProperties).toBe(false);
   });

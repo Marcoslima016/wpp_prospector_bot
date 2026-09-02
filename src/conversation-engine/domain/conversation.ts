@@ -2,6 +2,7 @@ import type { BotDecision } from "./bot-decision.ts";
 import { ConversationTurn } from "./conversation-turn.ts";
 import type { LeadIntent } from "./lead-intent.ts";
 import type { LeadQualification } from "./lead-qualification.ts";
+import type { CommercialPlan, ModuleId } from "./product-catalog.ts";
 
 export type ConversationLifecycle = "active" | "ended" | "awaitingHuman";
 
@@ -12,6 +13,9 @@ interface SerializedConversation {
   leadQualification: LeadQualification | null;
   state: ConversationLifecycle;
   processedMessageIds: string[];
+  recommendedModules?: ModuleId[];
+  interestedModules?: ModuleId[];
+  quotedPlan?: CommercialPlan | null;
 }
 
 export interface RecordInboundTurnInput {
@@ -32,6 +36,12 @@ export class Conversation {
   private _leadQualification: LeadQualification | null;
   private _state: ConversationLifecycle;
   private readonly _processedMessageIds: Set<string>;
+  /** Acumulado da conversa: módulos já ofertados pelo bot. */
+  private _recommendedModules: ModuleId[];
+  /** Acumulado da conversa: módulos em que o lead demonstrou interesse. */
+  private _interestedModules: ModuleId[];
+  /** Último plano cujo preço foi citado ao lead (sticky). */
+  private _quotedPlan: CommercialPlan | null;
 
   private constructor(props: {
     leadPhone: string;
@@ -40,6 +50,9 @@ export class Conversation {
     leadQualification: LeadQualification | null;
     state: ConversationLifecycle;
     processedMessageIds: Set<string>;
+    recommendedModules: ModuleId[];
+    interestedModules: ModuleId[];
+    quotedPlan: CommercialPlan | null;
   }) {
     this.leadPhone = props.leadPhone;
     this._turns = props.turns;
@@ -47,6 +60,9 @@ export class Conversation {
     this._leadQualification = props.leadQualification;
     this._state = props.state;
     this._processedMessageIds = props.processedMessageIds;
+    this._recommendedModules = props.recommendedModules;
+    this._interestedModules = props.interestedModules;
+    this._quotedPlan = props.quotedPlan;
   }
 
   static createNew(leadPhone: string): Conversation {
@@ -57,6 +73,9 @@ export class Conversation {
       leadQualification: null,
       state: "active",
       processedMessageIds: new Set(),
+      recommendedModules: [],
+      interestedModules: [],
+      quotedPlan: null,
     });
   }
 
@@ -74,6 +93,21 @@ export class Conversation {
 
   get state(): ConversationLifecycle {
     return this._state;
+  }
+
+  /** Módulos que o bot já ofertou ao longo da conversa. */
+  get recommendedModules(): readonly ModuleId[] {
+    return this._recommendedModules;
+  }
+
+  /** Módulos em que o lead demonstrou interesse ao longo da conversa. */
+  get interestedModules(): readonly ModuleId[] {
+    return this._interestedModules;
+  }
+
+  /** Último plano cujo preço foi citado ao lead, ou `null`. */
+  get quotedPlan(): CommercialPlan | null {
+    return this._quotedPlan;
   }
 
   /** O motor só deve gerar resposta automática enquanto a conversa não estiver aguardando humano. */
@@ -138,6 +172,9 @@ export class Conversation {
   }
 
   applyDecision(decision: BotDecision, now: Date = new Date()): void {
+    const recommendedModules = [...decision.recommendedModules];
+    const interestedModules = [...decision.interestedModules];
+
     for (const message of decision.replyMessages) {
       this._turns.push(
         ConversationTurn.outbound({
@@ -146,12 +183,20 @@ export class Conversation {
           leadIntent: decision.leadIntent,
           leadQualification: decision.leadQualification,
           reasoning: decision.reasoning,
+          recommendedModules,
+          interestedModules,
+          quotedPlan: decision.quotedPlan,
         }),
       );
     }
 
     this._leadIntent = decision.leadIntent;
     this._leadQualification = decision.leadQualification;
+    this._recommendedModules = unionModules(this._recommendedModules, recommendedModules);
+    this._interestedModules = unionModules(this._interestedModules, interestedModules);
+    if (decision.quotedPlan !== null) {
+      this._quotedPlan = decision.quotedPlan;
+    }
 
     // As mensagens inbound que motivaram esta decisão deixam de estar pendentes.
     this.clearPending();
@@ -176,6 +221,9 @@ export class Conversation {
       leadQualification: this._leadQualification,
       state: this._state,
       processedMessageIds: [...this._processedMessageIds],
+      recommendedModules: [...this._recommendedModules],
+      interestedModules: [...this._interestedModules],
+      quotedPlan: this._quotedPlan,
     };
   }
 
@@ -187,6 +235,17 @@ export class Conversation {
       leadQualification: raw.leadQualification,
       state: raw.state,
       processedMessageIds: new Set(raw.processedMessageIds),
+      // Retrocompat: conversas salvas antes desta mudança não têm os campos.
+      recommendedModules: raw.recommendedModules ?? [],
+      interestedModules: raw.interestedModules ?? [],
+      quotedPlan: raw.quotedPlan ?? null,
     });
   }
+}
+
+function unionModules(current: ModuleId[], incoming: ModuleId[]): ModuleId[] {
+  if (incoming.length === 0) return current;
+  const merged = new Set<ModuleId>(current);
+  for (const id of incoming) merged.add(id);
+  return [...merged];
 }

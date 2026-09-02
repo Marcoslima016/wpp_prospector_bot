@@ -1,5 +1,6 @@
 import type { LeadIntent } from "./lead-intent.ts";
 import type { LeadQualification } from "./lead-qualification.ts";
+import type { CommercialPlan, ModuleId } from "./product-catalog.ts";
 
 export type TurnDirection = "inbound" | "outbound";
 
@@ -15,6 +16,9 @@ export interface OutboundTurnProps {
   leadIntent: LeadIntent;
   leadQualification: LeadQualification | null;
   reasoning: string | null;
+  recommendedModules: ModuleId[];
+  interestedModules: ModuleId[];
+  quotedPlan: CommercialPlan | null;
 }
 
 interface SerializedTurn {
@@ -27,6 +31,9 @@ interface SerializedTurn {
   leadIntent?: LeadIntent;
   leadQualification?: LeadQualification | null;
   reasoning?: string | null;
+  recommendedModules?: ModuleId[];
+  interestedModules?: ModuleId[];
+  quotedPlan?: CommercialPlan | null;
 }
 
 /**
@@ -44,6 +51,9 @@ export class ConversationTurn {
   readonly leadIntent?: LeadIntent;
   readonly leadQualification?: LeadQualification | null;
   readonly reasoning?: string | null;
+  readonly recommendedModules: readonly ModuleId[];
+  readonly interestedModules: readonly ModuleId[];
+  readonly quotedPlan: CommercialPlan | null;
 
   private constructor(props: {
     direction: TurnDirection;
@@ -55,6 +65,9 @@ export class ConversationTurn {
     leadIntent?: LeadIntent;
     leadQualification?: LeadQualification | null;
     reasoning?: string | null;
+    recommendedModules?: ModuleId[];
+    interestedModules?: ModuleId[];
+    quotedPlan?: CommercialPlan | null;
   }) {
     this.direction = props.direction;
     this.text = props.text;
@@ -65,6 +78,9 @@ export class ConversationTurn {
     this.leadIntent = props.leadIntent;
     this.leadQualification = props.leadQualification;
     this.reasoning = props.reasoning;
+    this.recommendedModules = props.recommendedModules ?? [];
+    this.interestedModules = props.interestedModules ?? [];
+    this.quotedPlan = props.quotedPlan ?? null;
   }
 
   static inbound(props: InboundTurnProps): ConversationTurn {
@@ -85,6 +101,9 @@ export class ConversationTurn {
       leadIntent: props.leadIntent,
       leadQualification: props.leadQualification,
       reasoning: props.reasoning,
+      recommendedModules: props.recommendedModules,
+      interestedModules: props.interestedModules,
+      quotedPlan: props.quotedPlan,
     });
   }
 
@@ -120,6 +139,9 @@ export class ConversationTurn {
       serialized.leadIntent = this.leadIntent;
       serialized.leadQualification = this.leadQualification;
       serialized.reasoning = this.reasoning;
+      serialized.recommendedModules = [...this.recommendedModules];
+      serialized.interestedModules = [...this.interestedModules];
+      serialized.quotedPlan = this.quotedPlan;
     }
 
     return serialized;
@@ -136,6 +158,10 @@ export class ConversationTurn {
       leadIntent: raw.leadIntent,
       leadQualification: raw.leadQualification,
       reasoning: raw.reasoning,
+      // Retrocompat: turnos salvos antes desta mudança não têm os campos.
+      recommendedModules: raw.recommendedModules ?? [],
+      interestedModules: raw.interestedModules ?? [],
+      quotedPlan: raw.quotedPlan ?? null,
     });
   }
 }

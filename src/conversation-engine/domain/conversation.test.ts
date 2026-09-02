@@ -29,7 +29,11 @@ describe("Conversation", () => {
 
   it("aplica uma decisão com resposta: adiciona turnos outbound e atualiza o status do lead", () => {
     const conversation = Conversation.createNew("+5511999999999");
-    conversation.recordInboundTurn({ text: "quero saber mais", timestamp: t0, messageId: "wamid.1" });
+    conversation.recordInboundTurn({
+      text: "quero saber mais",
+      timestamp: t0,
+      messageId: "wamid.1",
+    });
 
     conversation.applyDecision(
       decision({
@@ -61,7 +65,10 @@ describe("Conversation", () => {
   it("reabre automaticamente uma conversa encerrada no próximo inbound", () => {
     const conversation = Conversation.createNew("+5511999999999");
     conversation.recordInboundTurn({ text: "tchau", timestamp: t0, messageId: "wamid.1" });
-    conversation.applyDecision(decision({ endConversation: true, replyMessages: ["Até mais!"] }), t0);
+    conversation.applyDecision(
+      decision({ endConversation: true, replyMessages: ["Até mais!"] }),
+      t0,
+    );
     expect(conversation.state).toBe("ended");
 
     conversation.reopenIfEnded();
@@ -71,7 +78,11 @@ describe("Conversation", () => {
 
   it("não reabre uma conversa que está aguardando atendimento humano", () => {
     const conversation = Conversation.createNew("+5511999999999");
-    conversation.recordInboundTurn({ text: "quero falar com alguém", timestamp: t0, messageId: "wamid.1" });
+    conversation.recordInboundTurn({
+      text: "quero falar com alguém",
+      timestamp: t0,
+      messageId: "wamid.1",
+    });
     conversation.applyDecision(
       decision({ handoffToHuman: true, replyMessages: ["Vou te transferir."] }),
       t0,
@@ -118,5 +129,96 @@ describe("Conversation", () => {
     expect(restored.leadIntent).toBe("interested");
     expect(restored.hasProcessed("wamid.1")).toBe(true);
     expect(restored.turns).toHaveLength(2);
+  });
+
+  it("applyDecision grava módulos e plano no turno outbound e acumula no agregado", () => {
+    const conversation = Conversation.createNew("+5511999999999");
+
+    conversation.applyDecision(
+      decision({
+        replyMessages: ["O Gestão de Obras resolve isso."],
+        recommendedModules: ["gestao-obras"],
+        interestedModules: ["gestao-obras"],
+        quotedPlan: null,
+      }),
+      t0,
+    );
+    conversation.applyDecision(
+      decision({
+        replyMessages: ["O Essencial custa R$ 300/mês."],
+        recommendedModules: ["obra360"],
+        interestedModules: [],
+        quotedPlan: "essencial",
+      }),
+      t0,
+    );
+
+    const outbound = conversation.turns.filter((t) => t.direction === "outbound");
+    expect(outbound[0]!.recommendedModules).toEqual(["gestao-obras"]);
+    expect(outbound[0]!.quotedPlan).toBeNull();
+    expect(outbound[1]!.quotedPlan).toBe("essencial");
+
+    expect([...conversation.recommendedModules].sort()).toEqual(["gestao-obras", "obra360"]);
+    expect(conversation.interestedModules).toEqual(["gestao-obras"]);
+    expect(conversation.quotedPlan).toBe("essencial");
+  });
+
+  it("round-trip preserva os campos de módulos e plano citado", () => {
+    const conversation = Conversation.createNew("+5511999999999");
+    conversation.applyDecision(
+      decision({
+        replyMessages: ["ok"],
+        recommendedModules: ["dre-custos"],
+        interestedModules: ["dre-custos"],
+        quotedPlan: "personalizado",
+      }),
+      t0,
+    );
+
+    const restored = Conversation.fromJSON(JSON.parse(JSON.stringify(conversation.toJSON())));
+
+    expect(restored.recommendedModules).toEqual(["dre-custos"]);
+    expect(restored.interestedModules).toEqual(["dre-custos"]);
+    expect(restored.quotedPlan).toBe("personalizado");
+    const outbound = restored.turns.find((t) => t.direction === "outbound")!;
+    expect(outbound.recommendedModules).toEqual(["dre-custos"]);
+    expect(outbound.quotedPlan).toBe("personalizado");
+  });
+
+  it("carrega uma conversa salva antes desta mudança (sem os campos novos) sem erro", () => {
+    const legacy = {
+      leadPhone: "+5511999999999",
+      turns: [
+        {
+          direction: "inbound",
+          text: "oi",
+          timestamp: t0.toISOString(),
+          messageId: "wamid.1",
+          pendingDecision: false,
+        },
+        {
+          direction: "outbound",
+          text: "Olá! Como posso ajudar?",
+          timestamp: t0.toISOString(),
+          leadIntent: "interested",
+          leadQualification: "warm",
+          reasoning: null,
+        },
+      ],
+      leadIntent: "interested",
+      leadQualification: "warm",
+      state: "active",
+      processedMessageIds: ["wamid.1"],
+    };
+
+    const restored = Conversation.fromJSON(legacy as never);
+
+    expect(restored.recommendedModules).toEqual([]);
+    expect(restored.interestedModules).toEqual([]);
+    expect(restored.quotedPlan).toBeNull();
+    const outbound = restored.turns.find((t) => t.direction === "outbound")!;
+    expect(outbound.recommendedModules).toEqual([]);
+    expect(outbound.interestedModules).toEqual([]);
+    expect(outbound.quotedPlan).toBeNull();
   });
 });
