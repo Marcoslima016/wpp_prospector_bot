@@ -79,13 +79,9 @@
     },
     {
       "label": "Limpar histórico de conversas",
-      "detail": "Apaga os arquivos JSON de conversas por lead em CONVERSATIONS_DIR (padrão ./data/conversations). Mantém o diretório.",
+      "detail": "Apaga os arquivos *.json/*.tmp de conversas por lead em CONVERSATIONS_DIR (padrão ./data/conversations). Mantém o diretório.",
       "type": "shell",
-      "command": "sh",
-      "args": [
-        "-c",
-        "DIR=$(grep -E '^CONVERSATIONS_DIR=' .env 2>/dev/null | head -n1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\"); DIR=${DIR:-./data/conversations}; if [ ! -d \"$DIR\" ]; then echo \"Nada a limpar: $DIR não existe.\"; exit 0; fi; COUNT=$(find \"$DIR\" -maxdepth 1 -type f \\( -name '*.json' -o -name '*.tmp' \\) | wc -l | tr -d ' '); find \"$DIR\" -maxdepth 1 -type f \\( -name '*.json' -o -name '*.tmp' \\) -delete; echo \"Histórico de conversas limpo em $DIR ($COUNT arquivo(s) removido(s)).\""
-      ],
+      "command": "npm run conversations:clear",
       "options": {
         "cwd": "${workspaceFolder}"
       },

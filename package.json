@@ -9,6 +9,7 @@
     "start": "node --env-file-if-exists=.env dist/main.js",
     "test": "vitest run",
     "knowledge:validate": "node --experimental-transform-types scripts/validate-knowledge.ts",
+    "conversations:clear": "node --experimental-transform-types --env-file-if-exists=.env scripts/clear-conversations.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
