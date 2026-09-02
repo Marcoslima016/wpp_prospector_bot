@@ -1,0 +1,1266 @@
+BASE DE CONHECIMENTO COMERCIAL — MÓDULOS E FUNCIONALIDADES
+ECOSSISTEMA OBRA NA MÃO
+Versão para venda modular / bot de vendas
+Sem preços
+Sem BIM / CompatibilizaBIM
+
+==================================================
+1. OBJETIVO DESTE DOCUMENTO
+==================================================
+
+Este documento descreve os módulos do ecossistema Obra na Mão de forma separada.
+
+Ele deve ser utilizado pelo bot de vendas para:
+
+- explicar cada módulo individualmente;
+- apresentar funcionalidades específicas;
+- identificar qual módulo atende melhor a necessidade do cliente;
+- permitir a venda de soluções separadas;
+- evitar apresentar o ecossistema completo quando o cliente precisa apenas de uma parte;
+- explicar possibilidades de integração entre módulos;
+- diferenciar funcionalidades operacionais, administrativas, financeiras e de capacitação.
+
+REGRA IMPORTANTE:
+
+Os módulos podem ser apresentados individualmente.
+
+O bot não deve afirmar que o cliente precisa contratar todo o ecossistema para utilizar uma funcionalidade específica, salvo quando determinada funcionalidade depender tecnicamente de outro módulo.
+
+Quando houver integração possível, o bot deve apresentá-la como benefício adicional, e não como obrigação.
+
+==================================================
+2. VISÃO DOS MÓDULOS
+==================================================
+
+Os principais módulos atualmente considerados para oferta comercial são:
+
+1. Gestão de Obras / Obra na Mão Campo
+2. Obra360
+3. Gestão de Equipes e Presença
+4. Planejamento e Frentes de Serviço
+5. Checklists e Controle Operacional
+6. FluxoDRE Desktop / Gestão Administrativa
+7. Gestão de Colaboradores e Documentos
+8. Gestão de Vales, Pagamentos e Obrigações
+9. DRE, Custos e Centros de Custo
+10. Artisys Finance — Financeiro Inteligente
+11. Universidade Empresarial
+12. Jogos e Gamificação Educacional
+13. Assistente Inteligente de Uso do Sistema
+14. Hub Obra na Mão
+
+Alguns desses itens podem existir como partes de um sistema maior, mas comercialmente podem ser apresentados como conjuntos funcionais distintos.
+
+==================================================
+3. MÓDULO: GESTÃO DE OBRAS / OBRA NA MÃO CAMPO
+==================================================
+
+OBJETIVO
+
+Organizar a rotina operacional da obra e permitir que informações do campo sejam registradas de maneira estruturada.
+
+PÚBLICO PRINCIPAL
+
+- construtoras;
+- empreiteiras;
+- subempreiteiras;
+- empresas de instalações;
+- empresas hidráulicas;
+- empresas elétricas;
+- prestadores de serviços com equipes em obra;
+- empresas com encarregados e equipes distribuídas.
+
+PROBLEMAS QUE AJUDA A RESOLVER
+
+- informações espalhadas em grupos de WhatsApp;
+- dificuldade de saber o que está acontecendo em cada obra;
+- falta de registro das atividades executadas;
+- dependência excessiva do encarregado;
+- planejamento feito apenas verbalmente;
+- dificuldade de acompanhar equipes;
+- ausência de histórico do dia a dia da obra.
+
+FUNCIONALIDADES
+
+- cadastro de obras;
+- associação de equipes às obras;
+- organização do dia de trabalho;
+- acompanhamento de atividades;
+- tarefas;
+- frentes de serviço;
+- registros por data;
+- observações operacionais;
+- consulta de dias anteriores;
+- planejamento de dias futuros;
+- acompanhamento de pavimentos;
+- registro de pendências;
+- utilização por administrador, encarregado e colaborador.
+
+USO NO CAMPO
+
+O módulo foi pensado para ser utilizado em dispositivos móveis e ambientes de campo.
+
+O encarregado pode acessar as informações necessárias para executar e registrar o trabalho sem precisar navegar por áreas administrativas complexas.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+É adequado para empresas que querem inicialmente organizar apenas a operação da obra.
+
+INTEGRAÇÕES POSSÍVEIS
+
+Pode ser integrado posteriormente com:
+
+- gestão administrativa;
+- gestão de colaboradores;
+- financeiro;
+- DRE;
+- Universidade Empresarial;
+- dashboards e indicadores.
+
+==================================================
+4. MÓDULO: OBRA360
+==================================================
+
+OBJETIVO
+
+Oferecer uma visão rápida e consolidada do andamento operacional da obra.
+
+O Obra360 funciona como uma camada de acompanhamento que reúne informações importantes da execução.
+
+PÚBLICO PRINCIPAL
+
+- gestores;
+- engenheiros;
+- administradores;
+- encarregados;
+- responsáveis pelo planejamento da obra.
+
+PRINCIPAIS ÁREAS
+
+- Dia;
+- Pavimentos;
+- Planejamento;
+- Pendências.
+
+FUNCIONALIDADE: DIA
+
+Apresenta a visão da operação do dia.
+
+Pode incluir:
+
+- atividades previstas;
+- frentes em execução;
+- equipes;
+- observações;
+- informações relevantes para a execução imediata.
+
+FUNCIONALIDADE: PAVIMENTOS
+
+Permite acompanhar a evolução dos serviços por pavimento.
+
+É especialmente útil para obras verticais.
+
+Ajuda a identificar:
+
+- onde cada frente está;
+- quais pavimentos já foram executados;
+- quais pavimentos estão em andamento;
+- qual deve ser a próxima etapa.
+
+FUNCIONALIDADE: PLANEJAMENTO
+
+Permite visualizar atividades e frentes previstas para períodos futuros.
+
+Ajuda a preparar:
+
+- equipes;
+- sequência de execução;
+- prioridades;
+- distribuição de mão de obra.
+
+FUNCIONALIDADE: PENDÊNCIAS
+
+Centraliza situações que impedem ou dificultam a continuidade do trabalho.
+
+Exemplos:
+
+- frente não liberada;
+- serviço anterior pendente;
+- necessidade de correção;
+- dependência de outra equipe;
+- material pendente;
+- restrição operacional.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Pode ser apresentado comercialmente como um módulo de acompanhamento operacional.
+
+Sua utilização é mais completa quando conectado aos dados de Gestão de Obras.
+
+==================================================
+5. MÓDULO: GESTÃO DE EQUIPES E PRESENÇA
+==================================================
+
+OBJETIVO
+
+Organizar os colaboradores envolvidos nas obras e facilitar o acompanhamento de presença e atuação em campo.
+
+PÚBLICO PRINCIPAL
+
+Empresas que possuem equipes próprias ou terceirizadas atuando em uma ou mais obras.
+
+FUNCIONALIDADES
+
+- cadastro de colaboradores;
+- vinculação de colaboradores às obras;
+- associação a tarefas e frentes;
+- visualização de equipe;
+- registro diário de presença;
+- registro de faltas;
+- histórico de registros;
+- identificação de quem estava disponível em determinado dia;
+- suporte a diferentes perfis de acesso.
+
+PERFIS
+
+ADMINISTRADOR
+
+Possui visão ampla.
+
+ENCARREGADO
+
+Pode registrar e acompanhar informações da equipe em campo.
+
+COLABORADOR
+
+Possui acesso simplificado às informações relacionadas ao próprio trabalho.
+
+BENEFÍCIOS OPERACIONAIS
+
+- diminui controles paralelos;
+- reduz dependência de papel;
+- facilita consulta histórica;
+- aproxima informações de equipe da execução real da obra.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+Pode ser utilizado como solução inicial para empresas que precisam organizar equipes e presença antes de implantar funcionalidades mais amplas.
+
+==================================================
+6. MÓDULO: PLANEJAMENTO E FRENTES DE SERVIÇO
+==================================================
+
+OBJETIVO
+
+Organizar onde cada equipe deve trabalhar, qual atividade deve executar e como os serviços devem avançar ao longo da obra.
+
+PÚBLICO PRINCIPAL
+
+Empresas que possuem várias equipes ou serviços acontecendo simultaneamente.
+
+FUNCIONALIDADES
+
+- criação e controle de frentes;
+- definição de atividade;
+- associação de colaboradores;
+- definição de local ou pavimento;
+- continuidade de frentes;
+- planejamento diário;
+- planejamento semanal;
+- planejamento futuro;
+- acompanhamento da progressão do serviço;
+- observações por frente;
+- registro de pendências;
+- histórico de execução.
+
+CONTINUIDADE DAS FRENTES
+
+Uma frente pode permanecer ativa durante vários dias.
+
+Ela não precisa ser recriada diariamente.
+
+Isso permite acompanhar serviços reais que continuam até a conclusão de uma etapa.
+
+PROGRESSÃO POR PAVIMENTO
+
+Para obras verticais, a frente pode acompanhar a sequência dos pavimentos.
+
+Exemplo:
+
+- pavimento atual;
+- concluído;
+- próximo pavimento;
+- frente aguardando liberação.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+É especialmente indicado para empresas que já possuem controles administrativos, mas têm dificuldade no planejamento da produção em campo.
+
+==================================================
+7. MÓDULO: CHECKLISTS E CONTROLE OPERACIONAL
+==================================================
+
+OBJETIVO
+
+Padronizar verificações recorrentes da empresa e garantir que atividades importantes não dependam apenas da memória dos responsáveis.
+
+FUNCIONALIDADES
+
+- criação de checklists;
+- administração dos itens de checklist;
+- utilização em rotinas operacionais;
+- acompanhamento de verificações;
+- associação com atividades ou contexto da obra;
+- histórico de registros.
+
+EXEMPLOS DE USO
+
+- início de atividade;
+- conferência de preparação;
+- fechamento do dia;
+- validação de etapas;
+- rotinas internas;
+- verificações administrativas.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+É adequado para empresas que querem começar pela padronização de processos.
+
+==================================================
+8. MÓDULO: FLUXODRE DESKTOP / GESTÃO ADMINISTRATIVA
+==================================================
+
+OBJETIVO
+
+Centralizar a gestão administrativa da empresa em ambiente desktop.
+
+Enquanto o módulo de campo acompanha a execução, o FluxoDRE Desktop concentra processos de escritório.
+
+PÚBLICO PRINCIPAL
+
+- proprietários;
+- administradores;
+- financeiro;
+- RH;
+- gestores.
+
+FUNCIONALIDADES PRINCIPAIS
+
+- cadastro de colaboradores;
+- organização de documentos;
+- registros administrativos;
+- vales;
+- pagamentos;
+- recibos;
+- obrigações;
+- obras;
+- centros de custo;
+- informações financeiras;
+- DRE;
+- dashboards;
+- relatórios e histórico.
+
+CARACTERÍSTICA DO DESKTOP
+
+O ambiente desktop é indicado para operações que exigem:
+
+- maior volume de informação;
+- análise detalhada;
+- organização documental;
+- cadastros;
+- processamento administrativo;
+- uso recorrente no escritório.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+Pode ser utilizado mesmo por empresas que não utilizem inicialmente o módulo de campo.
+
+==================================================
+9. MÓDULO: GESTÃO DE COLABORADORES E DOCUMENTOS
+==================================================
+
+OBJETIVO
+
+Centralizar dados dos colaboradores e documentos associados.
+
+PÚBLICO PRINCIPAL
+
+Empresas que ainda controlam funcionários por planilhas, arquivos locais ou pastas físicas.
+
+FUNCIONALIDADES
+
+- cadastro de colaboradores;
+- organização de dados cadastrais;
+- associação com obras;
+- associação com registros financeiros;
+- documentos por colaborador;
+- anexos;
+- histórico;
+- utilização dos mesmos dados em diferentes partes do sistema.
+
+BENEFÍCIO ESTRUTURAL
+
+Evita cadastrar a mesma pessoa diversas vezes em diferentes controles.
+
+O colaborador passa a ser uma entidade única no sistema e pode ser relacionado a diferentes processos.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+Pode funcionar como uma solução de organização administrativa e de pessoal.
+
+==================================================
+10. MÓDULO: VALES, PAGAMENTOS E OBRIGAÇÕES
+==================================================
+
+OBJETIVO
+
+Organizar obrigações financeiras relacionadas aos colaboradores e à operação da empresa.
+
+FUNCIONALIDADES
+
+- registro de vales;
+- registro de pagamentos;
+- recibos;
+- obrigações previstas;
+- associação de registros a colaboradores;
+- histórico financeiro;
+- associação com obra ou centro de custo;
+- preparação dos dados para análise financeira.
+
+DIFERENCIAL
+
+Os registros administrativos podem servir posteriormente como base para conciliação financeira.
+
+Isso permite comparar o que a empresa esperava pagar com aquilo que efetivamente saiu da conta.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+Também pode ser vendido em conjunto com Artisys Finance para uma solução financeira mais completa.
+
+==================================================
+11. MÓDULO: DRE, CUSTOS E CENTROS DE CUSTO
+==================================================
+
+OBJETIVO
+
+Dar ao gestor uma visão organizada de receitas, despesas, custos e resultado da operação.
+
+FUNCIONALIDADES
+
+- organização de receitas;
+- organização de despesas;
+- estrutura de DRE;
+- análise de custos;
+- classificação;
+- centros de custo;
+- associação de gastos a obras;
+- consolidação financeira;
+- dashboards;
+- indicadores.
+
+CENTROS DE CUSTO
+
+Os centros de custo permitem organizar despesas de maneira mais detalhada.
+
+Um gasto pode ser relacionado ao contexto em que ocorreu.
+
+Exemplos:
+
+- determinada obra;
+- determinada atividade;
+- determinado setor;
+- determinada categoria.
+
+VISÃO GERENCIAL
+
+O objetivo é permitir que o gestor entenda não apenas quanto a empresa gastou, mas também onde o dinheiro foi utilizado.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+É indicado para empresas que precisam melhorar a gestão financeira e a leitura do resultado.
+
+==================================================
+12. MÓDULO: ARTISYS FINANCE — FINANCEIRO INTELIGENTE
+==================================================
+
+OBJETIVO
+
+Ajudar a empresa a conferir movimentações financeiras e comparar o extrato bancário com obrigações e registros existentes.
+
+PÚBLICO PRINCIPAL
+
+Empresas que possuem alto volume de pagamentos e gastam tempo realizando conferências manualmente.
+
+FUNCIONALIDADES
+
+- leitura de documentos financeiros;
+- leitura de extratos;
+- processamento de PDFs bancários;
+- identificação de movimentações;
+- comparação com obrigações;
+- conciliação financeira;
+- sugestão de correspondências;
+- detecção de divergências;
+- análise de pagamentos;
+- identificação de casos que exigem revisão humana.
+
+==================================================
+13. CONCILIAÇÃO FINANCEIRA
+==================================================
+
+O sistema procura relacionar movimentações bancárias aos registros administrativos.
+
+Para essa análise podem ser utilizados:
+
+- nome;
+- valor;
+- data;
+- histórico;
+- colaborador;
+- obrigação cadastrada;
+- combinação de obrigações;
+- outros dados disponíveis.
+
+EXEMPLO SIMPLES
+
+Obrigação cadastrada:
+Salário João — R$ 3.000.
+
+Extrato:
+PIX João — R$ 3.000.
+
+O sistema pode identificar uma correspondência provável.
+
+==================================================
+14. CONCILIAÇÃO DE MÚLTIPLAS OBRIGAÇÕES
+==================================================
+
+O Artisys Finance pode considerar situações em que uma única movimentação representa mais de uma obrigação.
+
+Exemplo:
+
+Extrato:
+PIX João — R$ 4.000.
+
+Obrigações:
+- salário: R$ 3.000;
+- vale/alimentação: R$ 1.000.
+
+O motor pode analisar a composição dessas obrigações e identificar que a soma corresponde à movimentação encontrada.
+
+Essa funcionalidade é importante para operações nas quais pagamentos são agrupados.
+
+==================================================
+15. DETECÇÃO DE DIVERGÊNCIAS FINANCEIRAS
+==================================================
+
+O módulo pode ajudar a identificar situações como:
+
+- pagamento encontrado sem obrigação relacionada;
+- obrigação prevista sem pagamento encontrado;
+- valores diferentes;
+- possível duplicidade;
+- combinação de várias obrigações;
+- necessidade de conferência manual.
+
+O sistema funciona como ferramenta de apoio à conferência.
+
+Ele não deve ser apresentado como substituto absoluto da validação financeira humana.
+
+==================================================
+16. MOTOR DETERMINÍSTICO E INTELIGÊNCIA ARTIFICIAL
+==================================================
+
+O Artisys Finance combina regras objetivas e inteligência artificial.
+
+REGRAS DETERMINÍSTICAS
+
+São utilizadas quando a situação pode ser resolvida por lógica objetiva.
+
+Exemplos:
+
+- valores;
+- datas;
+- somas;
+- nomes;
+- correspondências;
+- identificadores;
+- padrões conhecidos.
+
+INTELIGÊNCIA ARTIFICIAL
+
+Pode ser utilizada em situações que exigem interpretação.
+
+Exemplos:
+
+- históricos pouco claros;
+- informações não estruturadas;
+- movimentações ambíguas;
+- auxílio na classificação;
+- apoio ao usuário.
+
+BENEFÍCIO
+
+Essa arquitetura evita depender de inteligência artificial para tarefas que podem ser resolvidas por regras claras.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+O módulo pode ser comercializado como solução de análise e conciliação financeira.
+
+Sua integração com dados administrativos aumenta a quantidade de contexto disponível para análise.
+
+==================================================
+17. MÓDULO: UNIVERSIDADE EMPRESARIAL
+==================================================
+
+OBJETIVO
+
+Capacitar colaboradores utilizando uma plataforma digital adaptada à realidade da empresa.
+
+PÚBLICO PRINCIPAL
+
+Empresas que querem desenvolver competências de leitura, comunicação e matemática da equipe.
+
+ÁREAS PRINCIPAIS
+
+- Capacitação em Comunicação;
+- Capacitação em Leitura;
+- Capacitação Matemática.
+
+A plataforma evita classificações que possam constranger o colaborador.
+
+O conteúdo é apresentado como capacitação profissional.
+
+==================================================
+18. SONDAGEM INICIAL
+==================================================
+
+A plataforma pode iniciar o treinamento por meio de uma sondagem.
+
+OBJETIVO
+
+Identificar o nível de conhecimento do colaborador e orientar a progressão dos conteúdos.
+
+BENEFÍCIOS
+
+- reduz conteúdos inadequados;
+- evita começar por um nível excessivamente simples;
+- evita apresentar conteúdo muito avançado;
+- melhora a personalização da trilha.
+
+==================================================
+19. TRILHAS DE APRENDIZADO
+==================================================
+
+Os conteúdos são organizados de maneira progressiva.
+
+O colaborador avança por etapas e níveis de aprendizado.
+
+O sistema pode combinar:
+
+- explicações;
+- textos;
+- exemplos;
+- exercícios;
+- atividades práticas;
+- materiais de apoio;
+- jogos.
+
+==================================================
+20. CAPACITAÇÃO EM LEITURA
+==================================================
+
+Pode trabalhar competências como:
+
+- compreensão de textos;
+- identificação de informações;
+- interpretação;
+- leitura funcional;
+- entendimento de instruções;
+- relação entre texto e contexto.
+
+==================================================
+21. CAPACITAÇÃO EM COMUNICAÇÃO
+==================================================
+
+Pode trabalhar competências ligadas ao uso e compreensão da comunicação escrita.
+
+O objetivo é melhorar a capacidade do colaborador de compreender informações necessárias ao ambiente profissional.
+
+==================================================
+22. CAPACITAÇÃO MATEMÁTICA
+==================================================
+
+Pode trabalhar:
+
+- operações básicas;
+- raciocínio;
+- interpretação;
+- problemas;
+- exercícios;
+- situações práticas;
+- desenvolvimento gradual de competências matemáticas.
+
+==================================================
+23. EXERCÍCIOS, AVALIAÇÕES E FEEDBACK
+==================================================
+
+Os conteúdos podem ser intercalados com exercícios.
+
+A estrutura procura trabalhar ciclos curtos:
+
+conteúdo
+→ exercício
+→ feedback
+→ próximo conteúdo.
+
+Isso reduz a sensação de provas longas e torna o aprendizado mais contínuo.
+
+==================================================
+24. MATERIAIS DE APOIO
+==================================================
+
+A Universidade Empresarial pode disponibilizar materiais complementares.
+
+Eles podem ser utilizados para:
+
+- revisão;
+- consulta;
+- reforço;
+- estudo adicional;
+- apoio às atividades.
+
+==================================================
+25. EXPERIÊNCIA MOBILE / PWA
+==================================================
+
+O módulo é preparado para uso em dispositivos móveis.
+
+Isso facilita o acesso por colaboradores que não trabalham em computadores.
+
+Em dispositivos compatíveis, a solução pode ser instalada como PWA, oferecendo experiência semelhante a um aplicativo.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Sim.
+
+A Universidade Empresarial pode ser oferecida como solução independente de capacitação corporativa.
+
+==================================================
+26. MÓDULO: JOGOS E GAMIFICAÇÃO EDUCACIONAL
+==================================================
+
+OBJETIVO
+
+Reforçar conteúdos da Universidade Empresarial por meio de atividades interativas.
+
+FORMATOS POSSÍVEIS
+
+- palavras cruzadas;
+- jogos de palavras;
+- dominó matemático;
+- desafios de leitura;
+- exercícios interativos;
+- atividades com combinações variadas.
+
+PRINCÍPIO
+
+Os jogos não são apenas entretenimento.
+
+Eles são vinculados aos conteúdos trabalhados na capacitação.
+
+VARIEDADE
+
+Os motores podem gerar diferentes combinações para aumentar a quantidade de partidas e reduzir repetição excessiva.
+
+BENEFÍCIOS
+
+- maior engajamento;
+- reforço de conteúdo;
+- sessões curtas de aprendizado;
+- experiência menos semelhante a um curso tradicional.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Pode ser comercializado como complemento da Universidade Empresarial.
+
+Dependendo da configuração do produto, pode também ser apresentado como pacote de gamificação educacional.
+
+==================================================
+27. MÓDULO: ASSISTENTE INTELIGENTE
+==================================================
+
+OBJETIVO
+
+Ajudar o usuário a utilizar o sistema e compreender processos.
+
+O assistente pode funcionar como uma camada de apoio dentro das soluções.
+
+TIPOS DE AJUDA
+
+- explicar campos;
+- orientar preenchimentos;
+- indicar onde determinada funcionalidade está;
+- explicar processos;
+- orientar próximos passos;
+- responder dúvidas de uso;
+- ajudar na interpretação de informações disponíveis no sistema.
+
+ARQUITETURA
+
+O assistente não precisa executar todas as tarefas utilizando inteligência artificial.
+
+Processos objetivos podem ser tratados por regras do próprio sistema.
+
+A IA é utilizada principalmente onde existe necessidade de interpretação e orientação.
+
+BENEFÍCIO
+
+Reduz a curva de aprendizado do usuário.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+Pode ser apresentado como funcionalidade adicional ou camada premium de assistência, conforme o pacote comercial definido.
+
+==================================================
+28. MÓDULO: HUB OBRA NA MÃO
+==================================================
+
+OBJETIVO
+
+Funcionar como porta de entrada para os diferentes sistemas contratados pela empresa.
+
+O Hub organiza a experiência do usuário e apresenta os módulos disponíveis conforme seu perfil.
+
+FUNCIONALIDADES
+
+- acesso centralizado;
+- organização dos módulos;
+- identificação do usuário;
+- perfil de acesso;
+- direcionamento para ferramentas contratadas;
+- experiência integrada entre sistemas.
+
+EXEMPLO
+
+Um administrador pode visualizar os módulos administrativos e operacionais.
+
+Um encarregado pode receber acesso somente ao que utiliza em campo.
+
+Um colaborador pode acessar tarefas e capacitações.
+
+PODE SER VENDIDO SEPARADAMENTE?
+
+O Hub funciona principalmente como camada de organização quando a empresa utiliza mais de um módulo.
+
+==================================================
+29. PACOTES FUNCIONAIS POSSÍVEIS
+==================================================
+
+Esta seção não define preços.
+
+Ela serve apenas para orientar o bot sobre combinações que podem fazer sentido comercialmente.
+
+PACOTE OPERAÇÃO DE CAMPO
+
+Pode incluir:
+
+- Gestão de Obras;
+- Equipes;
+- Presença;
+- Tarefas;
+- Frentes;
+- Planejamento;
+- Obra360;
+- Checklists.
+
+INDICADO PARA:
+
+Empresas que precisam melhorar a organização da execução.
+
+--------------------------------------------------
+
+PACOTE ADMINISTRATIVO
+
+Pode incluir:
+
+- FluxoDRE Desktop;
+- colaboradores;
+- documentos;
+- vales;
+- pagamentos;
+- obrigações;
+- centros de custo;
+- DRE;
+- dashboards.
+
+INDICADO PARA:
+
+Empresas que precisam organizar escritório, pessoal e gestão financeira.
+
+--------------------------------------------------
+
+PACOTE FINANCEIRO INTELIGENTE
+
+Pode incluir:
+
+- registros administrativos;
+- obrigações;
+- Artisys Finance;
+- conciliação;
+- análise de extratos;
+- divergências;
+- DRE.
+
+INDICADO PARA:
+
+Empresas que gastam muito tempo conferindo pagamentos e movimentações.
+
+--------------------------------------------------
+
+PACOTE CAPACITAÇÃO
+
+Pode incluir:
+
+- Universidade Empresarial;
+- sondagem;
+- trilhas;
+- leitura;
+- comunicação;
+- matemática;
+- exercícios;
+- materiais;
+- jogos;
+- gamificação.
+
+INDICADO PARA:
+
+Empresas que querem desenvolver competências dos colaboradores.
+
+--------------------------------------------------
+
+PACOTE INTEGRADO
+
+Pode reunir módulos operacionais, administrativos, financeiros e de capacitação.
+
+INDICADO PARA:
+
+Empresas que querem conectar campo, escritório, equipe e financeiro.
+
+==================================================
+30. COMO O BOT DEVE IDENTIFICAR QUAL MÓDULO OFERECER
+==================================================
+
+Se o cliente disser:
+
+“Não sei o que minhas equipes estão fazendo.”
+
+Priorizar:
+- Gestão de Obras;
+- Obra360;
+- Frentes;
+- Planejamento.
+
+--------------------------------------------------
+
+“Meu encarregado manda tudo por WhatsApp.”
+
+Priorizar:
+- Gestão de Obras;
+- Tarefas;
+- Presença;
+- Notas operacionais;
+- Obra360.
+
+--------------------------------------------------
+
+“Tenho problema para controlar faltas.”
+
+Priorizar:
+- Gestão de Equipes e Presença.
+
+--------------------------------------------------
+
+“Tenho várias equipes em vários andares.”
+
+Priorizar:
+- Frentes de Serviço;
+- Pavimentos;
+- Obra360;
+- Planejamento.
+
+--------------------------------------------------
+
+“Uso muitas planilhas no escritório.”
+
+Priorizar:
+- FluxoDRE Desktop;
+- Gestão Administrativa;
+- Colaboradores;
+- Documentos.
+
+--------------------------------------------------
+
+“Tenho dificuldade para saber quanto cada obra custa.”
+
+Priorizar:
+- DRE;
+- Centros de Custo;
+- Gestão Administrativa;
+- integração com registros da obra.
+
+--------------------------------------------------
+
+“Perco muito tempo conferindo extrato.”
+
+Priorizar:
+- Artisys Finance;
+- Obrigações;
+- Conciliação Financeira.
+
+--------------------------------------------------
+
+“Faço um PIX que paga várias coisas ao mesmo funcionário.”
+
+Priorizar:
+- Artisys Finance;
+- conciliação de múltiplas obrigações.
+
+--------------------------------------------------
+
+“Quero treinar melhor minha equipe.”
+
+Priorizar:
+- Universidade Empresarial.
+
+--------------------------------------------------
+
+“Minha equipe tem dificuldade de leitura e matemática.”
+
+Priorizar:
+- Capacitação em Leitura;
+- Capacitação em Comunicação;
+- Capacitação Matemática;
+- Jogos e Gamificação.
+
+==================================================
+31. REGRAS PARA VENDA MODULAR
+==================================================
+
+O bot deve seguir estas regras:
+
+1. Não apresentar todos os módulos automaticamente.
+
+2. Primeiro entender a necessidade do cliente.
+
+3. Apresentar somente os módulos mais relacionados à dor identificada.
+
+4. Informar que existem outros módulos quando isso fizer sentido.
+
+5. Não afirmar que todos os módulos são obrigatórios.
+
+6. Não inventar dependências técnicas.
+
+7. Quando uma funcionalidade funcionar melhor integrada a outro módulo, explicar o benefício da integração.
+
+8. Não apresentar funcionalidades em desenvolvimento como disponíveis.
+
+9. Não mencionar BIM ou CompatibilizaBIM como parte da oferta atual.
+
+10. Não informar preços enquanto a base comercial de preços não estiver cadastrada.
+
+11. Não prometer economia financeira específica sem análise do cliente.
+
+12. Não prometer eliminação total de trabalho humano.
+
+13. Não dizer que a inteligência artificial toma decisões financeiras de forma autônoma.
+
+14. Sempre diferenciar automação de apoio e decisão final do usuário.
+
+==================================================
+32. FORMATO DE RESPOSTA RECOMENDADO PARA O BOT
+==================================================
+
+Ao explicar um módulo, utilizar preferencialmente esta estrutura:
+
+NOME DO MÓDULO
+
+O que é:
+Descrição curta.
+
+Para quem é:
+Perfil de empresa ou usuário.
+
+Resolve principalmente:
+Principais dores.
+
+Funcionalidades:
+Lista das funções mais relevantes.
+
+Pode funcionar separado?
+Sim / explicar eventual dependência.
+
+Pode integrar com:
+Módulos relacionados.
+
+==================================================
+33. RESUMO RÁPIDO DOS MÓDULOS
+==================================================
+
+GESTÃO DE OBRAS
+
+Organiza a execução do dia a dia da obra.
+
+--------------------------------------------------
+
+OBRA360
+
+Consolida a visão operacional de dia, pavimentos, planejamento e pendências.
+
+--------------------------------------------------
+
+GESTÃO DE EQUIPES E PRESENÇA
+
+Organiza colaboradores e registros de presença em campo.
+
+--------------------------------------------------
+
+PLANEJAMENTO E FRENTES
+
+Controla atividades, equipes, serviços e progressão da execução.
+
+--------------------------------------------------
+
+CHECKLISTS
+
+Padroniza verificações e rotinas.
+
+--------------------------------------------------
+
+FLUXODRE DESKTOP
+
+Centraliza a administração da empresa.
+
+--------------------------------------------------
+
+COLABORADORES E DOCUMENTOS
+
+Organiza informações e arquivos relacionados à equipe.
+
+--------------------------------------------------
+
+VALES, PAGAMENTOS E OBRIGAÇÕES
+
+Controla registros financeiros administrativos.
+
+--------------------------------------------------
+
+DRE E CENTROS DE CUSTO
+
+Organiza receitas, despesas, custos e resultados.
+
+--------------------------------------------------
+
+ARTISYS FINANCE
+
+Analisa extratos, concilia movimentações e identifica divergências.
+
+--------------------------------------------------
+
+UNIVERSIDADE EMPRESARIAL
+
+Capacita colaboradores em comunicação, leitura e matemática.
+
+--------------------------------------------------
+
+JOGOS E GAMIFICAÇÃO
+
+Reforçam os conteúdos de capacitação por meio de atividades interativas.
+
+--------------------------------------------------
+
+ASSISTENTE INTELIGENTE
+
+Ajuda o usuário a entender e utilizar as funcionalidades do sistema.
+
+--------------------------------------------------
+
+HUB OBRA NA MÃO
+
+Centraliza o acesso aos módulos contratados.
+
+==================================================
+34. POSICIONAMENTO FINAL
+==================================================
+
+O Obra na Mão deve ser apresentado como um ecossistema modular.
+
+O cliente pode começar pelo problema que precisa resolver hoje e ampliar a utilização conforme sua necessidade.
+
+A lógica comercial principal é:
+
+não vender obrigatoriamente um sistema grande para todos;
+
+identificar a dor;
+
+selecionar o módulo adequado;
+
+resolver aquela necessidade;
+
+e permitir integração com outras áreas quando fizer sentido.
+
+Os módulos cobrem quatro grandes grupos:
+
+OPERAÇÃO
+- obra;
+- equipes;
+- presença;
+- tarefas;
+- planejamento;
+- frentes;
+- pavimentos;
+- checklists.
+
+ADMINISTRAÇÃO
+- colaboradores;
+- documentos;
+- pagamentos;
+- obrigações;
+- organização do escritório.
+
+FINANCEIRO
+- DRE;
+- custos;
+- centros de custo;
+- conciliação;
+- extratos;
+- análise de divergências.
+
+CAPACITAÇÃO
+- leitura;
+- comunicação;
+- matemática;
+- trilhas;
+- exercícios;
+- jogos;
+- gamificação.
+
+O bot deve utilizar essa estrutura para recomendar somente aquilo que realmente está relacionado à necessidade apresentada pelo potencial cliente.

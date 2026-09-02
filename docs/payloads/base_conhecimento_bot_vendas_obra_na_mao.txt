@@ -1,0 +1,1070 @@
+BASE DE CONHECIMENTO — ECOSSISTEMA OBRA NA MÃO
+Versão para alimentação de bot de vendas
+Sem informações de preços
+Sem funcionalidades BIM ou CompatibilizaBIM
+
+==================================================
+1. VISÃO GERAL DO ECOSSISTEMA
+==================================================
+
+O Obra na Mão é um ecossistema digital voltado à gestão de empresas da construção civil, especialmente operações que precisam integrar escritório, obra, equipe, planejamento, financeiro, capacitação e acompanhamento operacional.
+
+A proposta não é oferecer apenas um aplicativo isolado, mas conectar diferentes áreas da empresa em uma mesma estrutura digital.
+
+O ecossistema foi pensado para resolver um problema comum na construção civil: informações importantes ficam espalhadas entre planilhas, papéis, grupos de WhatsApp, sistemas financeiros, controles pessoais dos encarregados, documentos no computador e conhecimento que depende de determinadas pessoas.
+
+A plataforma organiza essas informações em módulos especializados.
+
+Os principais componentes do ecossistema são:
+
+1. Obra na Mão — Hub do ecossistema
+2. Gestão de Obras / FluxoDRE Campo
+3. Obra360
+4. FluxoDRE Desktop / Gestão Administrativa
+5. Artisys Finance — Financeiro Inteligente
+6. Universidade Empresarial
+
+Cada módulo possui uma finalidade específica, mas os módulos podem trabalhar de maneira integrada.
+
+==================================================
+2. OBRA NA MÃO — HUB DO ECOSSISTEMA
+==================================================
+
+O Obra na Mão funciona como a identidade central e porta de entrada do ecossistema.
+
+Ele organiza o acesso às diferentes soluções utilizadas pela empresa e apresenta uma visão unificada das ferramentas disponíveis.
+
+Em vez de o usuário precisar entender vários sistemas desconectados, o ecossistema procura organizar tudo a partir do contexto da empresa, da obra e do perfil do usuário.
+
+O objetivo é centralizar o acesso aos recursos necessários para administrar uma operação de construção civil.
+
+Dependendo do perfil do usuário, podem ser disponibilizados recursos diferentes, como:
+
+- administração;
+- gestão das obras;
+- equipe;
+- planejamento;
+- informações financeiras;
+- capacitação;
+- acompanhamento operacional;
+- indicadores.
+
+==================================================
+3. PERFIS DE UTILIZAÇÃO
+==================================================
+
+ADMINISTRADOR
+
+Possui visão ampla da operação.
+
+Pode acessar informações administrativas, equipes, obras, planejamento, indicadores e demais áreas liberadas para sua função.
+
+ENCARREGADO
+
+Possui uma interface voltada principalmente para o dia a dia da obra.
+
+Pode acompanhar atividades, frentes, equipe, presença, tarefas e informações operacionais.
+
+COLABORADOR
+
+Possui uma experiência simplificada.
+
+Visualiza principalmente informações relacionadas ao próprio trabalho, como:
+
+- tarefas;
+- orientações;
+- atividades atribuídas;
+- capacitações;
+- conteúdos da Universidade Empresarial.
+
+Essa separação evita apresentar ao trabalhador informações administrativas que não são necessárias para sua função.
+
+==================================================
+4. GESTÃO DE OBRAS / FLUXODRE CAMPO
+==================================================
+
+É o núcleo operacional utilizado para organizar o trabalho dentro das obras.
+
+Seu objetivo é transformar o planejamento da obra em atividades que possam ser acompanhadas diariamente pela administração e pela equipe de campo.
+
+O sistema conecta:
+
+- obras;
+- pavimentos;
+- frentes de serviço;
+- funcionários;
+- atividades;
+- presença;
+- planejamento;
+- histórico operacional.
+
+==================================================
+5. CADASTRO DE OBRAS
+==================================================
+
+Permite organizar as diferentes obras atendidas pela empresa.
+
+Cada obra pode possuir informações próprias e equipes vinculadas.
+
+Isso permite que atividades e registros sejam relacionados corretamente ao local onde ocorreram.
+
+==================================================
+6. GESTÃO DE EQUIPES
+==================================================
+
+O sistema mantém o cadastro dos colaboradores envolvidos na operação.
+
+Esses colaboradores podem ser utilizados em diferentes áreas do sistema, como:
+
+- planejamento;
+- presença;
+- tarefas;
+- frentes de serviço;
+- documentos;
+- histórico operacional;
+- Universidade Empresarial.
+
+==================================================
+7. PLANEJAMENTO DIÁRIO E SEMANAL
+==================================================
+
+Uma das principais funcionalidades do sistema é permitir que a administração organize o trabalho antes da execução.
+
+É possível trabalhar com planejamento:
+
+- diário;
+- semanal;
+- futuro.
+
+O gestor pode definir previamente:
+
+- quais frentes devem trabalhar;
+- quais atividades precisam ser executadas;
+- quais pessoas estarão envolvidas;
+- onde o serviço será executado;
+- observações importantes.
+
+Isso permite que o encarregado abra o sistema e saiba o que precisa acontecer naquele dia.
+
+==================================================
+8. TAREFAS
+==================================================
+
+As tarefas representam atividades específicas que precisam ser executadas.
+
+Uma tarefa pode ser vinculada ao contexto da obra e aos responsáveis pela execução.
+
+O sistema permite utilizar tarefas para organizar atividades tanto do dia atual quanto de períodos futuros.
+
+O objetivo é reduzir a dependência de instruções exclusivamente verbais.
+
+O trabalhador ou encarregado consegue consultar o que foi planejado e a administração consegue acompanhar o que foi atribuído.
+
+==================================================
+9. FRENTES DE SERVIÇO
+==================================================
+
+As frentes representam os serviços em execução na obra.
+
+Exemplos:
+
+- fixação;
+- chumbamento;
+- distribuição de água fria;
+- esgoto aéreo;
+- dreno;
+- corte de alvenaria;
+- outras atividades configuradas pela empresa.
+
+Uma frente pode estar relacionada a um determinado pavimento ou etapa da construção.
+
+CONTINUIDADE DAS FRENTES
+
+Uma frente não desaparece simplesmente porque terminou o dia.
+
+Enquanto o serviço estiver ativo, ela continua fazendo parte da operação até ser concluída ou avançar para a próxima etapa.
+
+Isso é importante porque obras não funcionam como listas de tarefas independentes por dia.
+
+Uma atividade pode começar em um dia e continuar durante vários dias.
+
+PROGRESSÃO POR PAVIMENTOS
+
+Para serviços executados pavimento por pavimento, o sistema pode utilizar a progressão da frente.
+
+Exemplo:
+
+Uma equipe termina determinado serviço no 10º pavimento.
+
+A próxima etapa pode ser organizada para o 11º pavimento, mantendo a continuidade da frente.
+
+Isso permite representar melhor o funcionamento de edifícios verticais e serviços repetitivos.
+
+==================================================
+10. CONTROLE DE PRESENÇA E FALTAS
+==================================================
+
+O encarregado pode registrar a situação dos funcionários diretamente pela interface de campo.
+
+O sistema pode registrar situações como:
+
+- presente;
+- falta;
+- demais situações previstas pelo fluxo da empresa.
+
+A informação fica associada ao dia e ao colaborador.
+
+Isso reduz a necessidade de posteriormente reconstruir informações de presença utilizando conversas, mensagens ou anotações em papel.
+
+==================================================
+11. HISTÓRICO DA OBRA
+==================================================
+
+O sistema não trabalha somente com o dia atual.
+
+É possível navegar por outros dias.
+
+Isso permite consultar:
+
+- o que estava planejado;
+- quais frentes estavam abertas;
+- quem estava trabalhando;
+- registros daquele dia;
+- observações.
+
+O usuário também pode acessar períodos futuros para realizar planejamento antecipado.
+
+==================================================
+12. NOTAS OPERACIONAIS
+==================================================
+
+Dias, atividades e outros elementos da operação podem possuir observações.
+
+Esse recurso é utilizado para registrar informações que normalmente seriam perdidas em conversas informais.
+
+Exemplos:
+
+- atividade não liberada;
+- material pendente;
+- alteração de equipe;
+- dependência de outra frente;
+- problema encontrado durante o serviço;
+- orientação para o dia seguinte.
+
+Essas informações passam a fazer parte do histórico da operação.
+
+==================================================
+13. CHECKLISTS
+==================================================
+
+O sistema permite trabalhar com checklists operacionais.
+
+Os checklists podem ser administrados pela empresa e utilizados no acompanhamento das atividades de campo.
+
+A administração pode estruturar quais verificações precisam ser realizadas, evitando depender exclusivamente da memória da equipe.
+
+==================================================
+14. OBRA360
+==================================================
+
+O Obra360 é uma área operacional e executiva dentro da estrutura de Gestão de Obras.
+
+Sua finalidade é reunir informações importantes da execução da obra de maneira rápida.
+
+Entre as áreas trabalhadas pelo Obra360 estão:
+
+- Pavimentos;
+- Pendências;
+- Planejamento;
+- Dia.
+
+PAVIMENTOS
+
+Permite acompanhar a evolução dos serviços pelos diferentes pavimentos da obra.
+
+Esse tipo de visualização é especialmente útil em construções verticais, nas quais diversas equipes executam serviços semelhantes em diferentes andares.
+
+PENDÊNCIAS
+
+Centraliza situações que precisam ser resolvidas antes que determinada atividade possa continuar.
+
+Uma pendência pode representar, por exemplo:
+
+- serviço anterior não concluído;
+- frente ainda não liberada;
+- dependência operacional;
+- necessidade de correção;
+- impedimento identificado em campo.
+
+O objetivo é evitar que problemas importantes fiquem apenas na memória do encarregado.
+
+PLANEJAMENTO
+
+Permite visualizar o que está previsto para os próximos períodos.
+
+Ajuda a administração e a equipe de campo a entenderem quais frentes precisam avançar e onde os recursos deverão ser utilizados.
+
+DIA
+
+É a visão voltada à execução imediata.
+
+Apresenta as informações relevantes daquele dia para que a equipe saiba o que precisa ser executado.
+
+==================================================
+15. SINCRONIZAÇÃO CAMPO ↔ DESKTOP
+==================================================
+
+A arquitetura do sistema considera a comunicação entre a operação de campo e a estrutura administrativa.
+
+Informações podem circular entre o ambiente utilizado no escritório e o ambiente utilizado na obra.
+
+Essa estrutura permite trabalhar com processos de:
+
+- envio de informações;
+- recebimento de informações;
+- sincronização;
+- identificação de alterações;
+- tratamento de conflitos;
+- atualização do desktop a partir de registros realizados no campo.
+
+O objetivo é evitar que escritório e obra mantenham duas versões diferentes da realidade.
+
+==================================================
+16. FLUXODRE DESKTOP / GESTÃO ADMINISTRATIVA
+==================================================
+
+O FluxoDRE Desktop representa a camada administrativa do ecossistema.
+
+Enquanto o sistema de campo acompanha a execução da obra, o FluxoDRE organiza informações administrativas, financeiras e de pessoal.
+
+É destinado principalmente às pessoas responsáveis pelo escritório e pela administração da empresa.
+
+==================================================
+17. CADASTRO DE COLABORADORES
+==================================================
+
+Centraliza as informações dos funcionários da empresa.
+
+Os colaboradores cadastrados podem posteriormente ser relacionados a:
+
+- documentos;
+- pagamentos;
+- vales;
+- presença;
+- obras;
+- centros de custo;
+- tarefas;
+- registros operacionais.
+
+Isso reduz a duplicação de cadastros em diferentes processos.
+
+==================================================
+18. GESTÃO DE DOCUMENTOS
+==================================================
+
+O sistema permite organizar documentos relacionados à empresa e aos colaboradores.
+
+O objetivo é diminuir a dependência de pastas físicas e arquivos espalhados pelo computador.
+
+Os documentos passam a fazer parte do contexto administrativo da empresa.
+
+==================================================
+19. CONTROLE DE VALES, PAGAMENTOS E REGISTROS DE PESSOAL
+==================================================
+
+O sistema pode registrar informações financeiras relacionadas aos colaboradores.
+
+Exemplos:
+
+- vales;
+- pagamentos;
+- recibos;
+- obrigações relacionadas à folha;
+- outros lançamentos administrativos.
+
+Essas informações podem posteriormente ser utilizadas pelo módulo financeiro para conferência e conciliação.
+
+==================================================
+20. GERAÇÃO E ORGANIZAÇÃO DE DOCUMENTOS
+==================================================
+
+O FluxoDRE possui recursos voltados à geração e organização de documentos administrativos.
+
+A ideia é diminuir tarefas repetitivas do escritório e reduzir a necessidade de preencher manualmente os mesmos dados várias vezes.
+
+==================================================
+21. OBRAS E CENTROS DE CUSTO
+==================================================
+
+Os registros financeiros podem ser relacionados à estrutura operacional da empresa.
+
+Isso permite associar despesas e informações às respectivas:
+
+- obras;
+- atividades;
+- centros de custo.
+
+Com isso, a empresa pode evoluir de uma visão financeira puramente geral para uma visão financeira relacionada à execução.
+
+==================================================
+22. DRE E VISÃO FINANCEIRA
+==================================================
+
+O sistema trabalha com estrutura de acompanhamento de resultados.
+
+O objetivo é permitir que a empresa entenda melhor:
+
+- receitas;
+- despesas;
+- custos;
+- resultado;
+- distribuição dos gastos.
+
+Os dados administrativos registrados ao longo da operação ajudam a alimentar essa visão.
+
+==================================================
+23. DASHBOARDS E INDICADORES
+==================================================
+
+Informações importantes podem ser consolidadas em painéis.
+
+Os dashboards procuram transformar dados operacionais e administrativos em informações mais fáceis de interpretar.
+
+Em vez de analisar diversas telas individualmente, o gestor consegue acompanhar indicadores relevantes de maneira consolidada.
+
+==================================================
+24. ARTISYS FINANCE — FINANCEIRO INTELIGENTE
+==================================================
+
+O Artisys Finance é a camada de inteligência financeira do ecossistema.
+
+Seu objetivo é auxiliar a empresa a conferir o que estava previsto administrativamente com aquilo que realmente aconteceu nas contas bancárias.
+
+Ele funciona como uma camada adicional ao FluxoDRE.
+
+O FluxoDRE fornece o contexto da empresa.
+
+O Artisys utiliza esse contexto para realizar análises financeiras mais inteligentes.
+
+==================================================
+25. LEITURA DE EXTRATOS E DOCUMENTOS FINANCEIROS
+==================================================
+
+O sistema pode trabalhar com documentos financeiros como:
+
+- extratos;
+- arquivos;
+- PDFs bancários;
+- registros de movimentações.
+
+A finalidade é transformar essas informações em dados que possam ser comparados com os registros administrativos existentes.
+
+==================================================
+26. CONCILIAÇÃO FINANCEIRA
+==================================================
+
+Uma das funções do Artisys é ajudar a identificar a relação entre uma movimentação bancária e uma obrigação cadastrada.
+
+Exemplo:
+
+O sistema administrativo possui um pagamento previsto para determinado colaborador.
+
+Posteriormente aparece no extrato um PIX para essa pessoa.
+
+A análise financeira pode utilizar:
+
+- nome;
+- valor;
+- período;
+- histórico;
+- obrigações cadastradas;
+- demais informações disponíveis
+
+para sugerir ou identificar a correspondência.
+
+==================================================
+27. CONCILIAÇÃO DE UM PAGAMENTO COM MÚLTIPLAS OBRIGAÇÕES
+==================================================
+
+O sistema considera situações em que um único pagamento bancário representa mais de uma obrigação.
+
+Exemplo:
+
+PIX para João: R$ 4.000.
+
+Registros administrativos:
+
+- salário: R$ 3.000;
+- vale/alimentação: R$ 1.000.
+
+Em vez de exigir necessariamente uma correspondência simples de um lançamento bancário para um lançamento administrativo, a análise pode considerar a composição de múltiplas obrigações.
+
+Isso é especialmente importante em empresas nas quais vários valores são pagos juntos.
+
+==================================================
+28. MOTOR DETERMINÍSTICO + INTELIGÊNCIA ARTIFICIAL
+==================================================
+
+O Artisys não depende exclusivamente de inteligência artificial para interpretar todas as informações.
+
+Sempre que possível, o sistema utiliza regras determinísticas.
+
+Exemplos:
+
+- comparação de valores;
+- soma de obrigações;
+- datas;
+- identificação;
+- nomes;
+- centros de custo;
+- históricos;
+- padrões conhecidos.
+
+A inteligência artificial entra principalmente onde existe ambiguidade ou necessidade de interpretação.
+
+Essa arquitetura busca combinar:
+
+- previsibilidade;
+- velocidade;
+- menor custo computacional;
+- capacidade de interpretação.
+
+==================================================
+29. DETECÇÃO DE DIVERGÊNCIAS
+==================================================
+
+O módulo financeiro pode ajudar a identificar situações como:
+
+- movimentação sem obrigação correspondente;
+- obrigação sem pagamento encontrado;
+- valor divergente;
+- possível pagamento duplicado;
+- múltiplas obrigações relacionadas a uma única transferência;
+- necessidade de revisão manual.
+
+O objetivo não é apenas mostrar o extrato, mas ajudar a administração a encontrar situações que merecem atenção.
+
+==================================================
+30. RELAÇÃO FINANCEIRO ↔ DRE
+==================================================
+
+Uma movimentação financeira identificada pode ser relacionada ao contexto administrativo existente.
+
+Isso permite melhorar a qualidade da informação utilizada na DRE e nos relatórios financeiros.
+
+A visão desejada é:
+
+o que deveria acontecer
+→ o que aconteceu
+→ como isso impactou o resultado da empresa.
+
+==================================================
+31. UNIVERSIDADE EMPRESARIAL
+==================================================
+
+A Universidade Empresarial é o módulo de capacitação dos colaboradores.
+
+Seu objetivo é desenvolver competências que tenham impacto real na rotina profissional.
+
+A plataforma foi estruturada para trabalhar os conteúdos de maneira respeitosa e profissional, utilizando denominações como:
+
+- Capacitação em Comunicação;
+- Capacitação em Leitura;
+- Capacitação Matemática.
+
+O sistema evita rótulos que possam gerar constrangimento ao colaborador.
+
+==================================================
+32. SONDAGEM INICIAL
+==================================================
+
+Antes de simplesmente apresentar conteúdos, a plataforma pode avaliar o nível inicial do colaborador.
+
+Essa sondagem ajuda a identificar quais conteúdos são mais adequados para seu estágio atual.
+
+O objetivo é evitar:
+
+- conteúdos excessivamente fáceis;
+- conteúdos excessivamente difíceis;
+- trilhas inadequadas.
+
+==================================================
+33. TRILHAS DE APRENDIZADO
+==================================================
+
+Os conteúdos são organizados de maneira progressiva.
+
+A estrutura trabalha com níveis de aprendizado, permitindo que o colaborador avance gradualmente.
+
+A progressão não é apresentada como uma classificação negativa do trabalhador.
+
+Ela é tratada como desenvolvimento e capacitação.
+
+==================================================
+34. CAPACITAÇÃO EM LEITURA
+==================================================
+
+Trabalha habilidades relacionadas a:
+
+- interpretação;
+- compreensão;
+- identificação de informações;
+- leitura funcional;
+- entendimento de instruções;
+- associação entre texto e contexto.
+
+==================================================
+35. CAPACITAÇÃO EM COMUNICAÇÃO
+==================================================
+
+Trabalha competências relacionadas à compreensão e utilização da comunicação escrita no ambiente profissional.
+
+O foco é melhorar a capacidade do colaborador de compreender e utilizar informações necessárias à rotina.
+
+==================================================
+36. CAPACITAÇÃO MATEMÁTICA
+==================================================
+
+Trabalha conceitos matemáticos aplicáveis ao desenvolvimento do colaborador.
+
+Podem ser utilizados:
+
+- operações;
+- raciocínio;
+- interpretação;
+- exercícios;
+- situações práticas.
+
+==================================================
+37. EXERCÍCIOS E AVALIAÇÕES
+==================================================
+
+Os conteúdos são acompanhados por exercícios para verificar a compreensão.
+
+A experiência procura evitar longas sequências cansativas de questões.
+
+Os exercícios são distribuídos ao longo dos conteúdos, permitindo ciclos menores de:
+
+conteúdo
+→ prática
+→ feedback
+→ continuidade.
+
+==================================================
+38. MATERIAIS DE APOIO
+==================================================
+
+Os colaboradores podem ter acesso a materiais complementares para reforçar o aprendizado.
+
+Esses materiais podem ser utilizados dentro ou fora do momento de realização das atividades.
+
+==================================================
+39. JOGOS EDUCACIONAIS
+==================================================
+
+A Universidade Empresarial também possui uma camada de gamificação.
+
+Os jogos são utilizados como reforço do conteúdo, e não apenas como entretenimento.
+
+Entre os formatos trabalhados estão:
+
+- palavras cruzadas;
+- jogos de palavras;
+- dominó matemático;
+- desafios de leitura;
+- exercícios interativos.
+
+Os motores dos jogos trabalham com diferentes possibilidades e combinações para aumentar a variedade das partidas.
+
+==================================================
+40. GAMIFICAÇÃO
+==================================================
+
+A experiência busca tornar o treinamento menos parecido com um curso tradicional.
+
+Elementos visuais, personagens, atividades interativas e progressão ajudam a aumentar o engajamento.
+
+O objetivo é permitir que o colaborador aprenda utilizando sessões menores e mais leves.
+
+==================================================
+41. EXPERIÊNCIA MOBILE
+==================================================
+
+A Universidade Empresarial foi planejada para funcionar também como PWA.
+
+Isso permite uma experiência semelhante à de um aplicativo no celular, inclusive com possibilidade de instalação na tela inicial em dispositivos compatíveis.
+
+Essa característica é importante porque muitos colaboradores de campo não utilizam computador durante a rotina de trabalho.
+
+==================================================
+42. COMO OS SISTEMAS SE CONECTAM
+==================================================
+
+A principal característica estratégica do ecossistema é que cada sistema não precisa trabalhar isoladamente.
+
+A arquitetura procura conectar:
+
+PLANEJAMENTO
+→ CAMPO
+→ EQUIPE
+→ ADMINISTRAÇÃO
+→ FINANCEIRO
+→ GESTÃO
+
+Um exemplo de fluxo seria:
+
+1. A empresa cadastra uma obra.
+2. A equipe é vinculada à operação.
+3. As frentes são planejadas.
+4. O encarregado acompanha a execução pelo celular.
+5. Presenças, tarefas e avanços são registrados.
+6. A administração recebe essas informações.
+7. Obrigações e pagamentos são organizados no FluxoDRE.
+8. O Artisys compara os registros internos com movimentações financeiras.
+9. Os resultados alimentam indicadores administrativos e financeiros.
+10. Os colaboradores podem utilizar a Universidade Empresarial para capacitação.
+
+==================================================
+43. PRINCIPAL DIFERENCIAL CONCEITUAL
+==================================================
+
+O ecossistema não foi concebido apenas para digitalizar documentos.
+
+A intenção é digitalizar o fluxo de informação da empresa.
+
+Isso significa conectar fatos que normalmente ficam separados.
+
+Exemplo:
+
+Funcionário
+→ Presença
+→ Frente de serviço
+→ Obra
+→ Custo
+→ Pagamento
+→ Movimentação bancária
+→ DRE
+
+Outro fluxo possível:
+
+Pavimento
+→ Frente
+→ Planejamento
+→ Execução
+→ Pendência
+→ Conclusão
+
+==================================================
+44. PRINCIPAIS PROBLEMAS QUE O ECOSSISTEMA PROCURA RESOLVER
+==================================================
+
+O bot de vendas deve compreender que o produto é adequado principalmente para empresas que possuem problemas como:
+
+- gestão baseada em planilhas separadas;
+- excesso de controles manuais;
+- informações espalhadas pelo WhatsApp;
+- dificuldade de saber o que está acontecendo nas obras;
+- dificuldade de acompanhar equipes;
+- dificuldade de controlar frentes por pavimento;
+- retrabalho administrativo;
+- documentos espalhados;
+- pouca integração entre obra e escritório;
+- dificuldade para relacionar despesas às obras;
+- dificuldade para conferir pagamentos e extratos;
+- falta de histórico operacional;
+- dependência excessiva do conhecimento de uma única pessoa;
+- dificuldade de capacitar equipes de campo;
+- ausência de integração entre informações operacionais e administrativas.
+
+==================================================
+45. PERFIS DE EMPRESA QUE PODEM SE BENEFICIAR
+==================================================
+
+O ecossistema é especialmente aplicável a empresas que trabalham com execução de obras e possuem equipes distribuídas entre campo e escritório.
+
+Exemplos:
+
+- empreiteiras;
+- subempreiteiras;
+- empresas de instalações;
+- empresas hidráulicas;
+- empresas elétricas;
+- prestadores de serviços especializados;
+- empresas que trabalham em obras verticais;
+- construtoras;
+- operações que administram simultaneamente equipe, obra e custos.
+
+O produto não deve ser limitado comercialmente apenas a empresas hidráulicas.
+
+A arquitetura de gestão de frentes, equipes, tarefas, obras e financeiro pode ser aplicada a diferentes segmentos da construção.
+
+==================================================
+46. PAPEL DA INTELIGÊNCIA ARTIFICIAL
+==================================================
+
+A inteligência artificial é utilizada como ferramenta de apoio, e não como substituição indiscriminada das regras do sistema.
+
+Quando uma regra objetiva consegue resolver uma situação, o sistema pode utilizar lógica determinística.
+
+Quando é necessário:
+
+- interpretar;
+- comparar informações menos estruturadas;
+- auxiliar o usuário;
+- analisar ambiguidades;
+- explicar informações;
+- orientar o preenchimento de campos;
+
+a inteligência artificial pode complementar o sistema.
+
+Essa combinação permite criar uma experiência mais confiável do que simplesmente enviar todos os dados para uma IA e esperar uma resposta.
+
+==================================================
+47. ASSISTÊNCIA AO USUÁRIO
+==================================================
+
+A arquitetura do ecossistema também considera uma camada de assistência inteligente.
+
+Essa assistência pode ajudar o usuário a compreender:
+
+- qual informação preencher;
+- onde encontrar determinada funcionalidade;
+- como realizar um processo;
+- o significado de determinados campos;
+- quais próximos passos devem ser realizados.
+
+O objetivo é reduzir a necessidade de o usuário conhecer profundamente o sistema antes de começar a utilizá-lo.
+
+==================================================
+48. DESKTOP + CAMPO + MOBILE
+==================================================
+
+O ecossistema utiliza diferentes interfaces porque escritório e obra possuem necessidades diferentes.
+
+DESKTOP
+
+Mais apropriado para:
+
+- administração;
+- documentos;
+- análise;
+- financeiro;
+- gestão detalhada;
+- processamento mais pesado.
+
+MOBILE/PWA
+
+Mais apropriado para:
+
+- obra;
+- encarregados;
+- colaboradores;
+- presença;
+- tarefas;
+- consultas rápidas;
+- planejamento operacional;
+- capacitação.
+
+O objetivo não é simplesmente colocar todas as funções em todas as telas.
+
+Cada dispositivo deve apresentar principalmente aquilo que faz sentido naquele contexto.
+
+==================================================
+49. POSICIONAMENTO DO PRODUTO
+==================================================
+
+O bot não deve descrever o Obra na Mão simplesmente como:
+
+“um aplicativo para controlar obras”.
+
+Uma descrição mais adequada é:
+
+“O Obra na Mão é um ecossistema de gestão para construção civil que conecta operação de campo, equipes, planejamento, administração, financeiro inteligente e capacitação em uma estrutura integrada.”
+
+Outra forma de explicar:
+
+“É uma plataforma criada para aproximar a realidade da obra das informações utilizadas pela administração da empresa.”
+
+==================================================
+50. EXPLICAÇÃO CURTA PARA CLIENTES
+==================================================
+
+Quando o cliente perguntar apenas “o que o sistema faz?”, o bot pode responder:
+
+“O Obra na Mão é um ecossistema de gestão desenvolvido para empresas da construção civil. Ele conecta a operação da obra com o escritório, permitindo organizar equipes, presença, tarefas, frentes de serviço, pavimentos, planejamento, pendências, documentos, informações administrativas e financeiras. O ecossistema também possui recursos de análise financeira inteligente e uma Universidade Empresarial para capacitação dos colaboradores.”
+
+==================================================
+51. EXPLICAÇÃO INTERMEDIÁRIA
+==================================================
+
+Quando o cliente demonstrar interesse e pedir mais detalhes:
+
+“A plataforma possui módulos diferentes para cada área da empresa. No campo, encarregados e equipes conseguem acompanhar tarefas, frentes, pavimentos, presença e planejamento. No escritório, a gestão pode organizar funcionários, documentos, registros administrativos, custos e DRE. O módulo financeiro inteligente auxilia na conferência de extratos e pagamentos, inclusive em situações em que uma transferência representa várias obrigações diferentes. Há ainda uma Universidade Empresarial voltada à capacitação dos colaboradores.”
+
+==================================================
+52. O QUE O BOT NÃO DEVE FAZER
+==================================================
+
+O bot de vendas não deve:
+
+- inventar funcionalidades;
+- apresentar recursos futuros como se já estivessem disponíveis;
+- prometer integrações que não tenham sido confirmadas;
+- afirmar que uma automação elimina completamente a necessidade de conferência humana;
+- prometer resultados financeiros específicos;
+- fornecer valores sem que a tabela comercial seja posteriormente adicionada à base;
+- dizer que inteligência artificial toma decisões financeiras sozinha;
+- tratar todos os usuários como administradores;
+- dizer que todos os módulos precisam obrigatoriamente ser utilizados juntos;
+- mencionar CompatibilizaBIM;
+- mencionar funcionalidades BIM;
+- mencionar DWG ou IFC como funcionalidades comerciais do produto atual;
+- oferecer funcionalidades técnicas ainda em desenvolvimento como parte do sistema disponível.
+
+==================================================
+53. COMO O BOT DEVE CONDUZIR UMA CONVERSA DE VENDAS
+==================================================
+
+Antes de apresentar todas as funcionalidades, o bot deve tentar identificar o problema do cliente.
+
+Perguntas úteis incluem:
+
+- Quantas obras vocês costumam administrar simultaneamente?
+- Quantas pessoas trabalham em campo?
+- Existe encarregado responsável pelas equipes?
+- Como vocês controlam presença atualmente?
+- Como fazem o planejamento das atividades?
+- Trabalham com serviços repetitivos por pavimento?
+- Utilizam planilhas para acompanhar as obras?
+- Como as informações chegam da obra até o escritório?
+- Como controlam documentos e pagamentos dos funcionários?
+- Conseguem separar custos por obra?
+- Como fazem a conferência dos pagamentos com o extrato bancário?
+- Existe necessidade de treinamento ou capacitação da equipe?
+
+Depois das respostas, o bot deve apresentar os módulos relacionados àquela necessidade.
+
+==================================================
+54. EXEMPLOS DE ASSOCIAÇÃO ENTRE PROBLEMA E SOLUÇÃO
+==================================================
+
+CLIENTE:
+“Tenho dificuldade para saber o que cada equipe está fazendo.”
+
+SISTEMA RELACIONADO:
+Gestão de Obras + Obra360.
+
+CLIENTE:
+“O encarregado me manda tudo pelo WhatsApp.”
+
+SISTEMA RELACIONADO:
+Gestão de Obras / FluxoDRE Campo.
+
+CLIENTE:
+“Não consigo acompanhar em qual pavimento cada equipe está.”
+
+SISTEMA RELACIONADO:
+Obra360 + Frentes de Serviço.
+
+CLIENTE:
+“Perco muito tempo conferindo pagamento de funcionário.”
+
+SISTEMA RELACIONADO:
+FluxoDRE + Artisys Finance.
+
+CLIENTE:
+“Tenho várias planilhas de funcionários e documentos.”
+
+SISTEMA RELACIONADO:
+FluxoDRE Desktop.
+
+CLIENTE:
+“Minha equipe possui dificuldade com leitura ou matemática.”
+
+SISTEMA RELACIONADO:
+Universidade Empresarial, apresentada como ferramenta de capacitação profissional.
+
+==================================================
+55. CONCEITO CENTRAL PARA O BOT MEMORIZAR
+==================================================
+
+O bot deve entender a seguinte lógica:
+
+O Obra na Mão conecta o que acontece na obra, com as pessoas, com o escritório e com o financeiro.
+
+Ele não é apenas:
+
+- um ERP;
+- um aplicativo de ponto;
+- um gerenciador de tarefas;
+- um sistema financeiro;
+- uma plataforma de treinamento.
+
+Ele reúne diferentes camadas da operação em um ecossistema.
+
+CAMADA OPERACIONAL
+Gestão de Obras / FluxoDRE Campo / Obra360.
+
+CAMADA DE PESSOAS
+Equipe + Universidade Empresarial.
+
+CAMADA ADMINISTRATIVA
+FluxoDRE Desktop.
+
+CAMADA FINANCEIRA
+FluxoDRE + Artisys Finance.
+
+CAMADA EXECUTIVA
+Indicadores e visão consolidada das informações.
+
+A proposta final é criar uma continuidade digital entre:
+
+planejamento
+→ execução
+→ equipe
+→ administração
+→ financeiro
+→ decisão.
+
+==================================================
+56. RESUMO ESTRUTURAL PARA TREINAMENTO DO BOT
+==================================================
+
+NOME DO ECOSSISTEMA:
+Obra na Mão.
+
+SEGMENTO:
+Construção civil.
+
+FUNÇÃO PRINCIPAL:
+Integrar gestão operacional da obra, equipes, planejamento, administração, financeiro e capacitação.
+
+PRINCIPAIS MÓDULOS:
+- Gestão de Obras / FluxoDRE Campo;
+- Obra360;
+- FluxoDRE Desktop;
+- Artisys Finance;
+- Universidade Empresarial.
+
+PRINCIPAIS USUÁRIOS:
+- administradores;
+- gestores;
+- encarregados;
+- colaboradores.
+
+PRINCIPAIS DORES ATENDIDAS:
+- excesso de planilhas;
+- informações espalhadas;
+- dificuldade de acompanhar equipes;
+- dificuldade de acompanhar avanço de frentes;
+- falta de histórico;
+- retrabalho administrativo;
+- dificuldade de conciliação financeira;
+- falta de comunicação estruturada entre campo e escritório;
+- dificuldade de capacitação de colaboradores.
+
+POSICIONAMENTO:
+Ecossistema integrado de gestão para empresas da construção civil.
+
+REGRA COMERCIAL IMPORTANTE:
+O bot deve falar somente sobre funcionalidades confirmadas e disponíveis no ecossistema atual. Recursos em desenvolvimento não devem ser apresentados como funcionalidades prontas.
