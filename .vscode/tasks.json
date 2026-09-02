@@ -1,0 +1,100 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Iniciar servidor (dev)",
+      "detail": "Sobe o servidor Fastify em modo watch (npm run dev), recarregando a cada alteração em src/.",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": {
+        "owner": "wpp-prospector-bot-server",
+        "source": "server",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^\\s*(.+?):(\\d+):(\\d+)\\s+-\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*Restarting.*|.*node --watch.*",
+          "endsPattern": ".*Servidor iniciado.*"
+        }
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
+      "label": "Iniciar servidor (produção)",
+      "detail": "Compila (tsc) e sobe o servidor a partir de dist/ (npm run build && npm start).",
+      "type": "shell",
+      "command": "npm run build && npm start",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": {
+        "owner": "wpp-prospector-bot-server",
+        "source": "server",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^\\s*(.+?):(\\d+):(\\d+)\\s+-\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*tsc.*|.*node .*dist/main\\.js.*",
+          "endsPattern": ".*Servidor iniciado.*"
+        }
+      },
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
+      "label": "Limpar histórico de conversas",
+      "detail": "Apaga os arquivos JSON de conversas por lead em CONVERSATIONS_DIR (padrão ./data/conversations). Mantém o diretório.",
+      "type": "shell",
+      "command": "sh",
+      "args": [
+        "-c",
+        "DIR=$(grep -E '^CONVERSATIONS_DIR=' .env 2>/dev/null | head -n1 | cut -d= -f2- | tr -d '\"' | tr -d \"'\"); DIR=${DIR:-./data/conversations}; if [ ! -d \"$DIR\" ]; then echo \"Nada a limpar: $DIR não existe.\"; exit 0; fi; COUNT=$(find \"$DIR\" -maxdepth 1 -type f \\( -name '*.json' -o -name '*.tmp' \\) | wc -l | tr -d ' '); find \"$DIR\" -maxdepth 1 -type f \\( -name '*.json' -o -name '*.tmp' \\) -delete; echo \"Histórico de conversas limpo em $DIR ($COUNT arquivo(s) removido(s)).\""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "clear": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}
