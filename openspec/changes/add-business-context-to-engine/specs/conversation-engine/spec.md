@@ -1,0 +1,239 @@
+# conversation-engine — Delta
+
+## MODIFIED Requirements
+
+### Requirement: Interpretação de Mensagem Recebida via LLM
+
+O sistema SHALL, dado o histórico da conversa, uma ou mais mensagens novas de um lead e o
+**contexto de negócio recuperado** para essas mensagens, produzir uma decisão estruturada
+consultando um LLM com um prompt de prospecção predefinido. A interpretação NÃO SHALL
+depender de um provider de LLM concreto — o provider é um detalhe substituível definido na
+composição. O contexto de negócio SHALL ser obtido antes da chamada de geração da decisão
+e SHALL ser fornecido ao motor por uma abstração substituível (não acoplada a uma técnica
+de recuperação específica).
+
+#### Scenario: Mensagem interpretada com sucesso
+
+- **WHEN** uma mensagem de um lead é processada, o contexto de negócio é recuperado e o LLM responde no formato esperado
+- **THEN** o sistema obtém uma decisão estruturada do bot e prossegue para aplicá-la à conversa
+
+#### Scenario: Falha na chamada ao LLM
+
+- **WHEN** a chamada ao LLM de geração da decisão falha (erro de rede, erro da API, timeout)
+- **THEN** o sistema tenta novamente uma única vez com backoff; persistindo a falha, registra o erro e não envia resposta, sem lançar exceção não tratada
+
+#### Scenario: Saída do LLM fora do formato esperado
+
+- **WHEN** a resposta do LLM não adere ao formato estruturado exigido
+- **THEN** o sistema trata como falha de interpretação (nova tentativa única e, persistindo, registro de erro sem resposta)
+
+#### Scenario: Contexto de negócio indisponível para o turno
+
+- **WHEN** a recuperação do contexto de negócio não retorna nenhum trecho específico para as mensagens do lead
+- **THEN** o sistema ainda gera a decisão usando o conhecimento fixo obrigatório (posicionamento, guardrails e planos/preços) e o histórico, sem falhar o turno
+
+### Requirement: Formato Estruturado da Decisão do Bot
+
+A decisão do bot SHALL conter: uma lista ordenada de mensagens de resposta (possivelmente
+vazia), um indicador de encerramento da conversa, a intenção identificada do lead, a
+qualificação comercial do lead (ou ausência dela), um indicador de transferência para
+atendimento humano, uma justificativa textual opcional, a lista de módulos que o bot
+ofereceu neste turno, a lista de módulos em que o lead demonstrou interesse e o plano
+comercial cujo preço foi citado (ou a ausência de citação). A justificativa NUNCA SHALL
+ser enviada ao lead.
+
+A intenção do lead SHALL ser um valor entre: interessado, não interessado, precisa de mais
+informação, pedido de opt-out, fora de tópico, indefinido.
+
+O plano citado SHALL ser um valor entre: `essencial`, `personalizado` ou nulo (nenhum
+preço citado no turno).
+
+As listas de módulos ofertados e de interesse SHALL usar identificadores estáveis de
+módulo e SHALL poder ser vazias.
+
+#### Scenario: Decisão sem resposta
+
+- **WHEN** a decisão do bot contém uma lista de mensagens de resposta vazia
+- **THEN** o sistema não envia nenhuma mensagem ao lead, mas ainda registra o turno recebido e atualiza o status da conversa
+
+#### Scenario: Decisão com justificativa
+
+- **WHEN** a decisão do bot inclui uma justificativa textual
+- **THEN** a justificativa é registrada para auditoria e não aparece em nenhuma mensagem enviada ao lead
+
+#### Scenario: Decisão com módulos e plano citados
+
+- **WHEN** o bot oferece um ou mais módulos e/ou cita o preço de um plano em um turno
+- **THEN** o sistema registra no turno os módulos ofertados, os módulos de interesse identificados e o plano cujo preço foi citado, e atualiza esses valores no agregado da conversa
+
+#### Scenario: Conversa persistida antes desta mudança
+
+- **WHEN** o sistema carrega uma conversa cujo histórico foi salvo sem os campos de módulos e plano citado
+- **THEN** o sistema a interpreta com listas de módulos vazias e plano citado nulo, sem erro
+
+## ADDED Requirements
+
+### Requirement: Base de Conhecimento do Negócio
+
+O sistema SHALL manter uma base de conhecimento comercial versionada no repositório,
+contendo o conhecimento sobre o ecossistema Obra na Mão / FluxoDRE (módulos,
+funcionalidades, público, mapa dor→solução, posicionamento) e a tabela de planos e preços.
+A base SHALL ser organizada em trechos delimitados, cada um com metadados que permitam
+distinguir a que módulo pertence, se pertence ao plano base ou ao conjunto adicional, e
+qual o tipo de conteúdo (visão, funcionalidades, dor→solução, público, guardrail, objeção,
+sondagem, preço).
+
+Na inicialização, o sistema SHALL preparar essa base para consulta local. Se a base não
+puder ser preparada — arquivo ausente ou ilegível, formato inválido, trecho sem os
+metadados exigidos, ou nenhum trecho reconhecido — o sistema SHALL abortar a inicialização
+com um erro claro e NÃO SHALL iniciar o servidor.
+
+#### Scenario: Base preparada com sucesso no boot
+
+- **WHEN** o sistema inicia e a base de conhecimento está presente e bem formada
+- **THEN** a base fica disponível para consulta e o servidor sobe normalmente
+
+#### Scenario: Base ausente ou malformada no boot
+
+- **WHEN** o sistema inicia e a base de conhecimento está ausente, ilegível ou com trechos sem os metadados exigidos
+- **THEN** o sistema registra um erro descritivo e encerra a inicialização sem começar a atender requisições
+
+### Requirement: Recuperação de Contexto de Negócio para a Interpretação
+
+Para cada lote de mensagens novas de um lead, o sistema SHALL montar um contexto de
+negócio combinando: (a) um conjunto fixo e obrigatório de trechos — posicionamento curto,
+guardrails de produto e a tabela de planos e preços — sempre incluído; e (b) um conjunto
+variável de trechos recuperados por busca léxica local a partir de sinais extraídos das
+mensagens do lead.
+
+A extração dos sinais de busca (temas, dores, módulos prováveis) SHALL ser feita por uma
+consulta ao LLM anterior à consulta que gera a decisão. Se essa consulta de extração
+falhar ou não retornar sinais úteis, o sistema SHALL derivar os sinais de busca localmente
+a partir do texto das mensagens (normalização e expansão por sinônimos/jargão) e seguir o
+fluxo sem falhar o turno.
+
+O conjunto variável recuperado SHALL ser limitado por uma quantidade máxima de trechos e
+por um limite de relevância mínima configuráveis; trechos abaixo do limite de relevância
+SHALL ser descartados. A classificação de intenção e a qualificação do lead SHALL
+permanecer determinadas apenas pela decisão gerada na consulta final ao LLM, não pela
+consulta de extração.
+
+#### Scenario: Mensagem com tema identificável
+
+- **WHEN** o lead descreve uma necessidade ou pergunta sobre um assunto coberto pela base
+- **THEN** o sistema recupera os trechos relevantes e os inclui no contexto enviado à consulta de geração da decisão
+
+#### Scenario: Falha na consulta de extração de sinais
+
+- **WHEN** a consulta ao LLM que extrai os sinais de busca falha ou volta sem sinais úteis
+- **THEN** o sistema deriva os sinais localmente a partir do texto das mensagens e prossegue com a recuperação e a geração da decisão
+
+#### Scenario: Nenhum trecho acima do limite de relevância
+
+- **WHEN** a busca léxica não encontra trechos com relevância suficiente
+- **THEN** o sistema envia apenas o conjunto fixo obrigatório e o histórico à consulta de geração da decisão
+
+#### Scenario: Conteúdo fixo sempre presente
+
+- **WHEN** qualquer decisão é gerada, independentemente do resultado da busca
+- **THEN** o posicionamento curto, os guardrails de produto e a tabela de planos e preços estão presentes no contexto enviado ao LLM
+
+### Requirement: Conhecimento de Produto e Planos Comerciais
+
+O bot SHALL apresentar o produto como o ecossistema modular Obra na Mão / FluxoDRE para
+construção civil e SHALL conhecer os módulos do plano base (operação de campo, gestão
+administrativa e DRE/custos) e os módulos do conjunto adicional (financeiro inteligente,
+universidade empresarial, jogos/gamificação e assistente inteligente).
+
+O bot SHALL trabalhar com dois planos comerciais: **Essencial** (plano base, funcionalidades
+reduzidas) e **Personalizado** (plano completo, que libera todos os módulos do conjunto
+adicional por um valor único acima do base). O bot SHALL informar os valores dos planos
+conforme a tabela de preços da base e NÃO SHALL apresentar módulos do conjunto adicional
+como contratáveis avulsos.
+
+O bot SHALL usar somente informações presentes na base de conhecimento e NÃO SHALL
+inventar funcionalidades, números, prazos ou condições. Negociação de valores, descontos
+ou condições especiais SHALL resultar em transferência para atendimento humano.
+
+#### Scenario: Lead pergunta o que o sistema faz
+
+- **WHEN** o lead pede uma explicação geral do produto
+- **THEN** o bot responde com a descrição de ecossistema modular para construção civil, no nível curto ou intermediário adequado ao WhatsApp
+
+#### Scenario: Lead pergunta o preço
+
+- **WHEN** o lead pergunta quanto custa
+- **THEN** o bot informa o valor mensal do plano Essencial e menciona o plano Personalizado com o valor adicional, conforme a tabela de preços da base
+
+#### Scenario: Lead quer só um módulo do conjunto adicional
+
+- **WHEN** o lead pede para contratar isoladamente um módulo do conjunto adicional
+- **THEN** o bot explica que esse módulo está disponível no plano Personalizado, que libera todo o conjunto adicional, e não oferece contratação avulsa
+
+#### Scenario: Lead pede negociação ou condição especial
+
+- **WHEN** o lead quer negociar valor, pedir desconto ou tratar condição comercial especial
+- **THEN** o bot transfere a conversa para atendimento humano
+
+#### Scenario: Informação não consta na base
+
+- **WHEN** o lead pergunta algo que não está coberto pela base de conhecimento
+- **THEN** o bot diz que vai confirmar com o time e não inventa a resposta
+
+### Requirement: Condução de Venda Consultiva
+
+Antes de apresentar módulos, o bot SHALL procurar identificar a necessidade ou dor do lead,
+usando perguntas de sondagem objetivas, uma por mensagem. Identificada a dor, o bot SHALL
+apresentar apenas o conjunto mínimo de módulos relacionado a ela, e SHALL enquadrar a
+oferta nos dois planos comerciais sem afirmar que o lead precisa contratar todos os
+módulos. Integrações entre módulos SHALL ser apresentadas como benefício adicional, nunca
+como obrigação.
+
+As respostas SHALL seguir o formato do canal: mensagens curtas (explicação curta ou
+intermediária). A ficha estruturada de um módulo (o que é / para quem / resolve /
+funcionalidades / funciona separado / integra com) SHALL ser usada apenas quando o lead
+pedir explicitamente detalhes daquele módulo.
+
+#### Scenario: Lead genérico sem dor declarada
+
+- **WHEN** o lead inicia com interesse vago ("vi o anúncio", "quero saber mais")
+- **THEN** o bot faz uma pergunta de sondagem para entender a operação do lead antes de ofertar módulos
+
+#### Scenario: Dor identificada
+
+- **WHEN** o lead descreve um problema específico (ex.: não sabe o que cada equipe está fazendo)
+- **THEN** o bot apresenta apenas o conjunto mínimo de módulos relacionado àquela dor e o situa nos planos
+
+#### Scenario: Pedido explícito de detalhes de um módulo
+
+- **WHEN** o lead pede para detalhar um módulo específico
+- **THEN** o bot responde com a ficha estruturada daquele módulo
+
+#### Scenario: Enquadramento modular
+
+- **WHEN** o bot apresenta um módulo ou plano
+- **THEN** o bot não afirma que todos os módulos são obrigatórios e apresenta integrações como benefício opcional
+
+### Requirement: Guardrails de Produto e Fidelidade à Base
+
+O bot NÃO SHALL mencionar BIM, CompatibilizaBIM, DWG ou IFC como parte da oferta; NÃO SHALL
+apresentar recursos em desenvolvimento como disponíveis; NÃO SHALL prometer economia
+financeira específica sem análise; NÃO SHALL afirmar que a inteligência artificial toma
+decisões financeiras de forma autônoma; e SHALL sempre diferenciar automação de apoio da
+decisão final do usuário. Quando o lead claramente não pertence ao segmento de construção
+civil, o bot SHALL qualificá-lo como frio de forma cordial, sem forçar a oferta.
+
+#### Scenario: Lead menciona BIM ou DWG
+
+- **WHEN** o lead pergunta sobre BIM, CompatibilizaBIM, DWG ou IFC
+- **THEN** o bot não apresenta esses recursos como parte da oferta e redireciona para as funcionalidades disponíveis
+
+#### Scenario: Lead pede garantia de economia
+
+- **WHEN** o lead pede que o bot garanta um percentual ou valor de economia
+- **THEN** o bot não promete números específicos e explica que isso depende de análise do time
+
+#### Scenario: Lead fora do segmento
+
+- **WHEN** fica claro que o lead não atua com execução de obras / construção civil
+- **THEN** o bot encerra de forma cordial e qualifica o lead como frio
