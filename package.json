@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node --env-file-if-exists=.env dist/main.js",
     "test": "vitest run",
+    "knowledge:validate": "node --experimental-transform-types scripts/validate-knowledge.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

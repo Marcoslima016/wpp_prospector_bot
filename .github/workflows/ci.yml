@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - run: npm ci
+
+      # Gate da base de conhecimento comercial: garante que o parser + metadados
+      # + contagem mínima estão OK antes do deploy (o boot faz fail-fast disso).
+      - run: npm run knowledge:validate
+
+      - run: npm run lint
+
+      - run: npm test
+
+      - run: npm run build

@@ -3,11 +3,26 @@ import type { BotDecisionInput } from "../../domain/bot-decision.ts";
 import { Conversation } from "../../domain/conversation.ts";
 import { ReplyStrategy } from "../../domain/reply-strategy.ts";
 import { LlmClientError } from "../errors.ts";
+import type {
+  BusinessContextInput,
+  BusinessContextProvider,
+} from "../ports/business-context.port.ts";
 import type { ConversationRepositoryPort } from "../ports/conversation-repository.port.ts";
 import type { LlmClientPort, LlmRequest, LlmResponse } from "../ports/llm-client.port.ts";
 import type { Logger } from "../ports/logger.port.ts";
 import type { ReplySenderPort } from "../ports/reply-sender.port.ts";
 import { GenerateReplyUseCase } from "./generate-reply.use-case.ts";
+
+class FakeBusinessContext implements BusinessContextProvider {
+  calls: BusinessContextInput[] = [];
+  constructor(private readonly value: string | Error = "CONTEXTO DE NEGÓCIO") {}
+
+  getContext(input: BusinessContextInput): Promise<string> {
+    this.calls.push(input);
+    if (this.value instanceof Error) return Promise.reject(this.value);
+    return Promise.resolve(this.value);
+  }
+}
 
 const PHONE = "+5511999999999";
 const t0 = new Date("2026-08-27T12:00:00.000Z");
@@ -35,7 +50,9 @@ class FakeRepository implements ConversationRepositoryPort {
   }
 
   findConversationsWithPendingInbound(): Promise<Conversation[]> {
-    return Promise.resolve([...this.store.values()].filter((c) => c.pendingInboundTurns.length > 0));
+    return Promise.resolve(
+      [...this.store.values()].filter((c) => c.pendingInboundTurns.length > 0),
+    );
   }
 }
 
@@ -98,12 +115,17 @@ beforeEach(() => {
   logger = fakeLogger();
 });
 
-function build(llm: ScriptedLlmClient, sender: ReplySenderPort): GenerateReplyUseCase {
+function build(
+  llm: ScriptedLlmClient,
+  sender: ReplySenderPort,
+  businessContextProvider: BusinessContextProvider = new FakeBusinessContext(),
+): GenerateReplyUseCase {
   return new GenerateReplyUseCase({
     repository: repo,
     replyStrategy: strategy(),
     llmClient: llm,
     replySender: sender,
+    businessContextProvider,
     logger,
     clock: () => t0,
     retryBackoffMs: 0,
@@ -113,7 +135,9 @@ function build(llm: ScriptedLlmClient, sender: ReplySenderPort): GenerateReplyUs
 describe("GenerateReplyUseCase", () => {
   it("mensagem única do lead gera uma única resposta enviada", async () => {
     seededConversation(repo, ["wamid.1"]);
-    const llm = new ScriptedLlmClient([decisionJson({ replyMessages: ["Olá! Como posso ajudar?"] })]);
+    const llm = new ScriptedLlmClient([
+      decisionJson({ replyMessages: ["Olá! Como posso ajudar?"] }),
+    ]);
     const sender = new RecordingReplySender();
 
     await build(llm, sender).execute(PHONE, ["wamid.1"]);
@@ -137,7 +161,9 @@ describe("GenerateReplyUseCase", () => {
   it("assuntos distintos geram múltiplas respostas na ordem da decisão", async () => {
     seededConversation(repo, ["wamid.1", "wamid.2"]);
     const llm = new ScriptedLlmClient([
-      decisionJson({ replyMessages: ["Sobre o preço: é sob medida.", "Sobre a integração: sim, temos API."] }),
+      decisionJson({
+        replyMessages: ["Sobre o preço: é sob medida.", "Sobre a integração: sim, temos API."],
+      }),
     ]);
     const sender = new RecordingReplySender();
 
@@ -215,7 +241,10 @@ describe("GenerateReplyUseCase", () => {
   it("handoffToHuman: envia o turno, marca awaitingHuman e loga", async () => {
     seededConversation(repo, ["wamid.1"]);
     const llm = new ScriptedLlmClient([
-      decisionJson({ replyMessages: ["Vou te transferir para um vendedor."], handoffToHuman: true }),
+      decisionJson({
+        replyMessages: ["Vou te transferir para um vendedor."],
+        handoffToHuman: true,
+      }),
     ]);
     const sender = new RecordingReplySender();
 
@@ -259,5 +288,35 @@ describe("GenerateReplyUseCase", () => {
 
     expect(llm.calls).toHaveLength(2);
     expect(sender.sent.map((s) => s.body)).toEqual(["Deu certo na segunda"]);
+  });
+
+  it("recupera o contexto de negócio antes da geração e o repassa ao prompt", async () => {
+    seededConversation(repo, ["wamid.1"]);
+    const llm = new ScriptedLlmClient([decisionJson()]);
+    const sender = new RecordingReplySender();
+    const businessContext = new FakeBusinessContext("PINNED + PLANOS");
+
+    await build(llm, sender, businessContext).execute(PHONE, ["wamid.1"]);
+
+    expect(businessContext.calls).toHaveLength(1);
+    expect(businessContext.calls[0]!.newMessages).toEqual(["mensagem 0"]);
+    const system = llm.calls[0]!.system;
+    const systemText = typeof system === "string" ? system : system.map((b) => b.text).join("\n");
+    expect(systemText).toContain("PINNED + PLANOS");
+  });
+
+  it("segue gerando a resposta mesmo se a recuperação do contexto de negócio falhar", async () => {
+    seededConversation(repo, ["wamid.1"]);
+    const llm = new ScriptedLlmClient([decisionJson({ replyMessages: ["Resposta mesmo assim"] })]);
+    const sender = new RecordingReplySender();
+    const businessContext = new FakeBusinessContext(new Error("índice indisponível"));
+
+    await build(llm, sender, businessContext).execute(PHONE, ["wamid.1"]);
+
+    expect(sender.sent.map((s) => s.body)).toEqual(["Resposta mesmo assim"]);
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("contexto de negócio"),
+      expect.objectContaining({ leadPhone: PHONE }),
+    );
   });
 });

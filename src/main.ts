@@ -5,6 +5,8 @@ import { GenerateReplyUseCase } from "./conversation-engine/application/use-case
 import { loadConversationEngineEnv } from "./conversation-engine/infrastructure/config/env.ts";
 import { PendingInboundSweeper } from "./conversation-engine/infrastructure/boot/pending-inbound-sweeper.ts";
 import { InboundBatchCoordinator } from "./conversation-engine/infrastructure/inbound/inbound-batch-coordinator.ts";
+import { loadKnowledge } from "./conversation-engine/infrastructure/knowledge/knowledge-loader.ts";
+import { LexicalRetrievalBusinessContext } from "./conversation-engine/infrastructure/knowledge/lexical-retrieval.business-context.ts";
 import { AnthropicLlmClient } from "./conversation-engine/infrastructure/llm/anthropic-llm-client.ts";
 import { FileConversationRepository } from "./conversation-engine/infrastructure/persistence/file-conversation-repository.ts";
 import { ReplySenderAdapter } from "./conversation-engine/infrastructure/sending/reply-sender.adapter.ts";
@@ -36,7 +38,10 @@ export const sendTextMessage = new SendTextMessageUseCase(gateway);
 
 // --- Motor de conversas (conversation-engine) ---
 const promptText = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "conversation-engine/domain/reply-strategy.prompt.md"),
+  join(
+    dirname(fileURLToPath(import.meta.url)),
+    "conversation-engine/domain/reply-strategy.prompt.md",
+  ),
   "utf8",
 );
 
@@ -49,6 +54,35 @@ const llmClient = new AnthropicLlmClient({
   apiKey: conversationEnv.ANTHROPIC_API_KEY,
   workspaceId: conversationEnv.ANTHROPIC_WORKSPACE_ID,
 });
+
+// Base de conhecimento comercial: preparada no boot. Fail-fast — se a base não
+// construir (arquivo ausente, `.md` malformado, metadado faltando, zero
+// trechos), o processo não sobe.
+let knowledge: ReturnType<typeof loadKnowledge>;
+try {
+  knowledge = loadKnowledge(conversationEnv.KNOWLEDGE_DIR);
+  logger.info("Base de conhecimento comercial preparada", {
+    chunks: knowledge.chunks.length,
+    pinned: knowledge.chunks.filter((c) => c.pinned).length,
+  });
+} catch (error) {
+  console.error(
+    "Falha ao preparar a base de conhecimento comercial — abortando a inicialização",
+    error,
+  );
+  process.exit(1);
+}
+
+const businessContextProvider = new LexicalRetrievalBusinessContext({
+  llmClient,
+  index: knowledge.index,
+  pinnedContext: knowledge.pinnedContext,
+  extractionModel: conversationEnv.EXTRACTION_LLM_MODEL,
+  topK: conversationEnv.RETRIEVAL_TOP_K,
+  minScore: conversationEnv.RETRIEVAL_MIN_SCORE,
+  logger,
+});
+
 const conversationRepository = new FileConversationRepository(conversationEnv.CONVERSATIONS_DIR);
 const replySender = new ReplySenderAdapter({ sendTextMessage, logger });
 
@@ -57,6 +91,7 @@ const generateReply = new GenerateReplyUseCase({
   replyStrategy,
   llmClient,
   replySender,
+  businessContextProvider,
   logger,
 });
 

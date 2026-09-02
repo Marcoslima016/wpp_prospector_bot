@@ -2,6 +2,7 @@ import { BotDecision } from "../../domain/bot-decision.ts";
 import { Conversation } from "../../domain/conversation.ts";
 import type { ReplyStrategy } from "../../domain/reply-strategy.ts";
 import { InterpretationError } from "../errors.ts";
+import type { BusinessContextProvider } from "../ports/business-context.port.ts";
 import type { ConversationRepositoryPort } from "../ports/conversation-repository.port.ts";
 import type { LlmClientPort } from "../ports/llm-client.port.ts";
 import type { Logger } from "../ports/logger.port.ts";
@@ -12,6 +13,7 @@ export interface GenerateReplyUseCaseDeps {
   replyStrategy: ReplyStrategy;
   llmClient: LlmClientPort;
   replySender: ReplySenderPort;
+  businessContextProvider: BusinessContextProvider;
   logger: Logger;
   clock?: () => Date;
   /** Backoff antes da tentativa adicional após uma falha de interpretação. */
@@ -26,6 +28,7 @@ export class GenerateReplyUseCase {
   private readonly replyStrategy: ReplyStrategy;
   private readonly llmClient: LlmClientPort;
   private readonly replySender: ReplySenderPort;
+  private readonly businessContextProvider: BusinessContextProvider;
   private readonly logger: Logger;
   private readonly clock: () => Date;
   private readonly retryBackoffMs: number;
@@ -35,6 +38,7 @@ export class GenerateReplyUseCase {
     this.replyStrategy = deps.replyStrategy;
     this.llmClient = deps.llmClient;
     this.replySender = deps.replySender;
+    this.businessContextProvider = deps.businessContextProvider;
     this.logger = deps.logger;
     this.clock = deps.clock ?? (() => new Date());
     this.retryBackoffMs = deps.retryBackoffMs ?? 500;
@@ -60,7 +64,24 @@ export class GenerateReplyUseCase {
     conversation.reopenIfEnded();
 
     const newMessages = pending.map((turn) => turn.text);
-    const request = this.replyStrategy.buildRequest(conversation, newMessages);
+
+    let businessContext = "";
+    try {
+      businessContext = await this.businessContextProvider.getContext({
+        conversation,
+        newMessages,
+      });
+    } catch (error) {
+      this.logger.error(
+        "Falha ao recuperar o contexto de negócio — seguindo sem trechos recuperados",
+        {
+          leadPhone,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+
+    const request = this.replyStrategy.buildRequest(conversation, newMessages, businessContext);
 
     let decision: BotDecision;
     try {
