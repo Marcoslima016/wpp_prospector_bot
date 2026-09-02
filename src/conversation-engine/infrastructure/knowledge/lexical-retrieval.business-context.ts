@@ -4,6 +4,7 @@ import type {
 } from "../../application/ports/business-context.port.ts";
 import type { LlmClientPort } from "../../application/ports/llm-client.port.ts";
 import type { Logger } from "../../application/ports/logger.port.ts";
+import type { UsageRecorderPort } from "../../application/ports/usage-recorder.port.ts";
 import { RETRIEVED_CONTEXT_SEPARATOR } from "../../domain/reply-strategy.ts";
 import type { LexicalIndex } from "./lexical-index.ts";
 import {
@@ -26,11 +27,15 @@ export interface LexicalRetrievalConfig {
   extractionModel: string;
   topK: number;
   minScore: number;
+  /** Registro de consumo da chamada #1 (best-effort). */
+  usageRecorder: UsageRecorderPort;
   logger?: Logger;
   /** Mapa de sinônimos para a extração local (fallback). Default: `FIELD_SYNONYMS`. */
   synonyms?: Record<string, string[]>;
   /** Teto de tokens da resposta de extração. */
   extractionMaxTokens?: number;
+  /** Relógio — injetável em teste. Default: `() => new Date()`. */
+  clock?: () => Date;
 }
 
 /**
@@ -51,9 +56,11 @@ export class LexicalRetrievalBusinessContext implements BusinessContextProvider 
   private readonly extractionModel: string;
   private readonly topK: number;
   private readonly minScore: number;
+  private readonly usageRecorder: UsageRecorderPort;
   private readonly logger?: Logger;
   private readonly synonyms: Record<string, string[]>;
   private readonly extractionMaxTokens: number;
+  private readonly clock: () => Date;
 
   constructor(config: LexicalRetrievalConfig) {
     this.llmClient = config.llmClient;
@@ -62,15 +69,17 @@ export class LexicalRetrievalBusinessContext implements BusinessContextProvider 
     this.extractionModel = config.extractionModel;
     this.topK = config.topK;
     this.minScore = config.minScore;
+    this.usageRecorder = config.usageRecorder;
     this.logger = config.logger;
     this.synonyms = config.synonyms ?? FIELD_SYNONYMS;
     this.extractionMaxTokens = config.extractionMaxTokens ?? 400;
+    this.clock = config.clock ?? (() => new Date());
   }
 
   async getContext(input: BusinessContextInput): Promise<string> {
     const { newMessages } = input;
 
-    const signals = await this.extractSignals(newMessages);
+    const signals = await this.extractSignals(newMessages, input.conversation.leadPhone);
     const query = signalsToQuery(signals, newMessages);
 
     const results = query.trim()
@@ -86,7 +95,10 @@ export class LexicalRetrievalBusinessContext implements BusinessContextProvider 
   }
 
   /** Chamada #1 com fallback local. Nunca lança. */
-  private async extractSignals(newMessages: string[]): Promise<ExtractionSignals> {
+  private async extractSignals(
+    newMessages: string[],
+    leadPhone: string,
+  ): Promise<ExtractionSignals> {
     try {
       const response = await this.llmClient.generate({
         system: EXTRACTION_SYSTEM_PROMPT,
@@ -95,6 +107,17 @@ export class LexicalRetrievalBusinessContext implements BusinessContextProvider 
         maxTokens: this.extractionMaxTokens,
         responseSchema: EXTRACTION_JSON_SCHEMA as unknown as Record<string, unknown>,
       });
+
+      // A chamada #1 retornou → foi faturada. Registra o consumo (best-effort,
+      // fora do caminho crítico — não afeta o fallback nem o retorno).
+      void this.usageRecorder
+        .recordLlmCall({
+          occurredAt: this.clock(),
+          callType: "signal-extraction",
+          leadPhone,
+          usage: response.usage,
+        })
+        .catch(() => {});
 
       const parsed = parseExtractionSignals(response.text);
       if (parsed && !isEmptySignals(parsed)) {

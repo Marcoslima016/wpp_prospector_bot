@@ -100,4 +100,67 @@ describe("AnthropicLlmClient.generate", () => {
     const params = create.mock.calls[0]![0] as Record<string, unknown>;
     expect(params.system).toBe("PROMPT");
   });
+
+  it("mapeia usage/model/_request_id da resposta para LlmResponse.usage", async () => {
+    const create = vi.fn().mockResolvedValue({
+      content: [{ type: "text", text: "{}" }],
+      model: "claude-sonnet-5-20260101",
+      usage: {
+        input_tokens: 1200,
+        output_tokens: 340,
+        cache_read_input_tokens: 800,
+        cache_creation_input_tokens: 64,
+      },
+      _request_id: "req_abc123",
+    });
+
+    const result = await clientWith(create).generate(request);
+
+    expect(result.usage).toEqual({
+      model: "claude-sonnet-5-20260101",
+      inputTokens: 1200,
+      outputTokens: 340,
+      cacheReadTokens: 800,
+      cacheWriteTokens: 64,
+      requestId: "req_abc123",
+    });
+  });
+
+  it("coage contadores de cache ausentes/null para 0 e omite requestId quando não há _request_id", async () => {
+    const create = vi.fn().mockResolvedValue({
+      content: [{ type: "text", text: "{}" }],
+      model: "claude-sonnet-5",
+      usage: {
+        input_tokens: 10,
+        output_tokens: 5,
+        cache_read_input_tokens: null,
+        cache_creation_input_tokens: null,
+      },
+    });
+
+    const result = await clientWith(create).generate(request);
+
+    expect(result.usage).toEqual({
+      model: "claude-sonnet-5",
+      inputTokens: 10,
+      outputTokens: 5,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    });
+    expect(result.usage.requestId).toBeUndefined();
+  });
+
+  it("usa o modelo pedido quando a resposta não traz model e zera usage ausente", async () => {
+    const create = vi.fn().mockResolvedValue({ content: [{ type: "text", text: "oi" }] });
+
+    const result = await clientWith(create).generate(request);
+
+    expect(result.usage).toEqual({
+      model: "claude-sonnet-5",
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+    });
+  });
 });

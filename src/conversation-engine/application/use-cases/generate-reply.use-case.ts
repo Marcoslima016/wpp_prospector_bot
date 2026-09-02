@@ -7,6 +7,7 @@ import type { ConversationRepositoryPort } from "../ports/conversation-repositor
 import type { LlmClientPort } from "../ports/llm-client.port.ts";
 import type { Logger } from "../ports/logger.port.ts";
 import type { ReplySenderPort } from "../ports/reply-sender.port.ts";
+import type { UsageRecorderPort } from "../ports/usage-recorder.port.ts";
 
 export interface GenerateReplyUseCaseDeps {
   repository: ConversationRepositoryPort;
@@ -14,6 +15,7 @@ export interface GenerateReplyUseCaseDeps {
   llmClient: LlmClientPort;
   replySender: ReplySenderPort;
   businessContextProvider: BusinessContextProvider;
+  usageRecorder: UsageRecorderPort;
   logger: Logger;
   clock?: () => Date;
   /** Backoff antes da tentativa adicional após uma falha de interpretação. */
@@ -29,6 +31,7 @@ export class GenerateReplyUseCase {
   private readonly llmClient: LlmClientPort;
   private readonly replySender: ReplySenderPort;
   private readonly businessContextProvider: BusinessContextProvider;
+  private readonly usageRecorder: UsageRecorderPort;
   private readonly logger: Logger;
   private readonly clock: () => Date;
   private readonly retryBackoffMs: number;
@@ -39,6 +42,7 @@ export class GenerateReplyUseCase {
     this.llmClient = deps.llmClient;
     this.replySender = deps.replySender;
     this.businessContextProvider = deps.businessContextProvider;
+    this.usageRecorder = deps.usageRecorder;
     this.logger = deps.logger;
     this.clock = deps.clock ?? (() => new Date());
     this.retryBackoffMs = deps.retryBackoffMs ?? 500;
@@ -85,7 +89,7 @@ export class GenerateReplyUseCase {
 
     let decision: BotDecision;
     try {
-      decision = await this.interpretWithRetry(request);
+      decision = await this.interpretWithRetry(request, leadPhone);
     } catch (error) {
       this.logger.error("Falha ao interpretar mensagem do lead via LLM — sem resposta", {
         leadPhone,
@@ -116,13 +120,14 @@ export class GenerateReplyUseCase {
 
   private async interpretWithRetry(
     request: ReturnType<ReplyStrategy["buildRequest"]>,
+    leadPhone: string,
   ): Promise<BotDecision> {
     try {
-      return await this.interpretOnce(request);
+      return await this.interpretOnce(request, leadPhone);
     } catch (firstError) {
       await sleep(this.retryBackoffMs);
       try {
-        return await this.interpretOnce(request);
+        return await this.interpretOnce(request, leadPhone);
       } catch (secondError) {
         throw secondError instanceof Error ? secondError : new Error(String(firstError));
       }
@@ -131,8 +136,20 @@ export class GenerateReplyUseCase {
 
   private async interpretOnce(
     request: ReturnType<ReplyStrategy["buildRequest"]>,
+    leadPhone: string,
   ): Promise<BotDecision> {
     const response = await this.llmClient.generate(request);
+
+    // A chamada retornou → foi faturada. Registra o consumo antes de parsear
+    // (best-effort, fora do caminho crítico — nunca falha o turno).
+    void this.usageRecorder
+      .recordLlmCall({
+        occurredAt: this.clock(),
+        callType: "reply-generation",
+        leadPhone,
+        usage: response.usage,
+      })
+      .catch(() => {});
 
     let parsed: unknown;
     try {

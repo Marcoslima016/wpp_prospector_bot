@@ -5,6 +5,7 @@ import type {
   LlmRequest,
   LlmResponse,
   LlmSystemBlock,
+  LlmUsage,
 } from "../../application/ports/llm-client.port.ts";
 
 export interface AnthropicLlmClientConfig {
@@ -69,8 +70,29 @@ export class AnthropicLlmClient implements LlmClientPort {
       throw new LlmClientError("Resposta da Anthropic API sem conteúdo de texto utilizável");
     }
 
-    return { text };
+    return { text, usage: toLlmUsage(message, request.model) };
   }
+}
+
+/**
+ * Mapeia `message.usage`/`message.model` para `LlmUsage`. Os contadores de cache
+ * vêm `null` quando não há prompt caching — coeridos para `0`. O `request-id` é
+ * anexado pelo SDK ao objeto de resposta (`_request_id`); ausente nos testes com
+ * SDK mockado.
+ */
+function toLlmUsage(
+  message: Anthropic.Message & { _request_id?: string | null },
+  requestedModel: string,
+): LlmUsage {
+  const usage = message.usage as Anthropic.Usage | undefined;
+  return {
+    model: message.model ?? requestedModel,
+    inputTokens: usage?.input_tokens ?? 0,
+    outputTokens: usage?.output_tokens ?? 0,
+    cacheReadTokens: usage?.cache_read_input_tokens ?? 0,
+    cacheWriteTokens: usage?.cache_creation_input_tokens ?? 0,
+    ...(message._request_id ? { requestId: message._request_id } : {}),
+  };
 }
 
 /**

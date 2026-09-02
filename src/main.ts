@@ -9,6 +9,8 @@ import { loadKnowledge } from "./conversation-engine/infrastructure/knowledge/kn
 import { LexicalRetrievalBusinessContext } from "./conversation-engine/infrastructure/knowledge/lexical-retrieval.business-context.ts";
 import { AnthropicLlmClient } from "./conversation-engine/infrastructure/llm/anthropic-llm-client.ts";
 import { FileConversationRepository } from "./conversation-engine/infrastructure/persistence/file-conversation-repository.ts";
+import { NoopUsageRecorder } from "./conversation-engine/infrastructure/persistence/noop-usage-recorder.ts";
+import { SqliteUsageRecorder } from "./conversation-engine/infrastructure/persistence/sqlite-usage-recorder.ts";
 import { ReplySenderAdapter } from "./conversation-engine/infrastructure/sending/reply-sender.adapter.ts";
 import { ReplyStrategy } from "./conversation-engine/domain/reply-strategy.ts";
 import { openDatabase } from "./shared/persistence/sqlite/open-database.ts";
@@ -92,6 +94,12 @@ try {
   process.exit(1);
 }
 
+// Registro append-only de consumo de tokens de cada chamada ao LLM. Desligado
+// por config, usa o recorder no-op e o fluxo opera como sem a feature.
+const usageRecorder = conversationEnv.LLM_USAGE_TRACKING_ENABLED
+  ? new SqliteUsageRecorder(database, logger)
+  : new NoopUsageRecorder();
+
 const businessContextProvider = new LexicalRetrievalBusinessContext({
   llmClient,
   index: knowledge.index,
@@ -99,15 +107,16 @@ const businessContextProvider = new LexicalRetrievalBusinessContext({
   extractionModel: conversationEnv.EXTRACTION_LLM_MODEL,
   topK: conversationEnv.RETRIEVAL_TOP_K,
   minScore: conversationEnv.RETRIEVAL_MIN_SCORE,
+  usageRecorder,
   logger,
 });
 
 const conversationRepository = new FileConversationRepository(conversationEnv.CONVERSATIONS_DIR);
 const replySender = new ReplySenderAdapter({ sendTextMessage, logger });
 
-// Conexão única do armazenamento SQL embutido, exposta para os adapters que
-// persistem dados estruturados nas próximas changes (consumo de LLM/WhatsApp,
-// projeção de leitura de conversas). Nenhum adapter a consome nesta change.
+// Conexão única do armazenamento SQL embutido. Consumida pelo `SqliteUsageRecorder`
+// (consumo de LLM) e exposta para os adapters das próximas changes (consumo de
+// WhatsApp, projeção de leitura de conversas).
 export { database };
 
 const generateReply = new GenerateReplyUseCase({
@@ -116,6 +125,7 @@ const generateReply = new GenerateReplyUseCase({
   llmClient,
   replySender,
   businessContextProvider,
+  usageRecorder,
   logger,
 });
 

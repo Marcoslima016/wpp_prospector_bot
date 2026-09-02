@@ -8,10 +8,22 @@ import type {
   BusinessContextProvider,
 } from "../ports/business-context.port.ts";
 import type { ConversationRepositoryPort } from "../ports/conversation-repository.port.ts";
-import type { LlmClientPort, LlmRequest, LlmResponse } from "../ports/llm-client.port.ts";
+import { fakeLlmResponse } from "../ports/llm-client.fake.ts";
+import type { LlmClientPort, LlmRequest, LlmResponse, LlmUsage } from "../ports/llm-client.port.ts";
 import type { Logger } from "../ports/logger.port.ts";
 import type { ReplySenderPort } from "../ports/reply-sender.port.ts";
+import type { LlmUsageEvent, UsageRecorderPort } from "../ports/usage-recorder.port.ts";
 import { GenerateReplyUseCase } from "./generate-reply.use-case.ts";
+
+class RecordingUsageRecorder implements UsageRecorderPort {
+  events: LlmUsageEvent[] = [];
+  constructor(private readonly fail = false) {}
+
+  recordLlmCall(event: LlmUsageEvent): Promise<void> {
+    this.events.push(event);
+    return this.fail ? Promise.reject(new Error("falha ao registrar consumo")) : Promise.resolve();
+  }
+}
 
 class FakeBusinessContext implements BusinessContextProvider {
   calls: BusinessContextInput[] = [];
@@ -82,7 +94,10 @@ class RecordingReplySender implements ReplySenderPort {
   }
 }
 
-function decisionJson(overrides: Partial<BotDecisionInput> = {}): LlmResponse {
+function decisionJson(
+  overrides: Partial<BotDecisionInput> = {},
+  usage: Partial<LlmUsage> = {},
+): LlmResponse {
   const decision: BotDecisionInput = {
     replyMessages: ["resposta padrão"],
     endConversation: false,
@@ -92,7 +107,7 @@ function decisionJson(overrides: Partial<BotDecisionInput> = {}): LlmResponse {
     reasoning: "lead demonstrou interesse",
     ...overrides,
   };
-  return { text: JSON.stringify(decision) };
+  return fakeLlmResponse(JSON.stringify(decision), usage);
 }
 
 function strategy(): ReplyStrategy {
@@ -119,6 +134,7 @@ function build(
   llm: ScriptedLlmClient,
   sender: ReplySenderPort,
   businessContextProvider: BusinessContextProvider = new FakeBusinessContext(),
+  usageRecorder: UsageRecorderPort = new RecordingUsageRecorder(),
 ): GenerateReplyUseCase {
   return new GenerateReplyUseCase({
     repository: repo,
@@ -126,6 +142,7 @@ function build(
     llmClient: llm,
     replySender: sender,
     businessContextProvider,
+    usageRecorder,
     logger,
     clock: () => t0,
     retryBackoffMs: 0,
@@ -212,8 +229,8 @@ describe("GenerateReplyUseCase", () => {
   it("saída fora do schema (mesmo após retry): sem resposta", async () => {
     seededConversation(repo, ["wamid.1"]);
     const llm = new ScriptedLlmClient([
-      { text: "{ isso não é uma decisão }" },
-      { text: JSON.stringify({ replyMessages: 123 }) },
+      fakeLlmResponse("{ isso não é uma decisão }"),
+      fakeLlmResponse(JSON.stringify({ replyMessages: 123 })),
     ]);
     const sender = new RecordingReplySender();
 
@@ -318,5 +335,70 @@ describe("GenerateReplyUseCase", () => {
       expect.stringContaining("contexto de negócio"),
       expect.objectContaining({ leadPhone: PHONE }),
     );
+  });
+
+  describe("registro de consumo (best-effort)", () => {
+    it("registra um evento reply-generation com o leadPhone e o usage da chamada", async () => {
+      seededConversation(repo, ["wamid.1"]);
+      const llm = new ScriptedLlmClient([decisionJson({}, { inputTokens: 1234 })]);
+      const recorder = new RecordingUsageRecorder();
+
+      await build(llm, new RecordingReplySender(), undefined, recorder).execute(PHONE, ["wamid.1"]);
+
+      expect(recorder.events).toHaveLength(1);
+      expect(recorder.events[0]).toMatchObject({
+        callType: "reply-generation",
+        leadPhone: PHONE,
+        usage: { inputTokens: 1234 },
+      });
+    });
+
+    it("não registra quando a chamada ao LLM falha; registra só a bem-sucedida no retry", async () => {
+      seededConversation(repo, ["wamid.1"]);
+      const llm = new ScriptedLlmClient([new LlmClientError("timeout"), decisionJson()]);
+      const recorder = new RecordingUsageRecorder();
+
+      await build(llm, new RecordingReplySender(), undefined, recorder).execute(PHONE, ["wamid.1"]);
+
+      expect(recorder.events).toHaveLength(1);
+    });
+
+    it("registra um evento por chamada faturada: 2 quando a 1ª resposta falha no schema", async () => {
+      seededConversation(repo, ["wamid.1"]);
+      const llm = new ScriptedLlmClient([fakeLlmResponse("{ não é json }"), decisionJson()]);
+      const recorder = new RecordingUsageRecorder();
+
+      await build(llm, new RecordingReplySender(), undefined, recorder).execute(PHONE, ["wamid.1"]);
+
+      expect(recorder.events).toHaveLength(2);
+      expect(recorder.events.map((e) => e.callType)).toEqual([
+        "reply-generation",
+        "reply-generation",
+      ]);
+    });
+
+    it("falha ao registrar consumo não impede a decisão, o save nem o envio", async () => {
+      seededConversation(repo, ["wamid.1"]);
+      const llm = new ScriptedLlmClient([decisionJson({ replyMessages: ["Enviada assim mesmo"] })]);
+      const sender = new RecordingReplySender();
+
+      await build(llm, sender, undefined, new RecordingUsageRecorder(true)).execute(PHONE, [
+        "wamid.1",
+      ]);
+
+      expect(sender.sent.map((s) => s.body)).toEqual(["Enviada assim mesmo"]);
+      expect(repo.saved).toHaveLength(1);
+    });
+
+    it("recorder que não registra nada (no-op) não altera o turno", async () => {
+      seededConversation(repo, ["wamid.1"]);
+      const llm = new ScriptedLlmClient([decisionJson({ replyMessages: ["Olá"] })]);
+      const sender = new RecordingReplySender();
+      const noop: UsageRecorderPort = { recordLlmCall: () => Promise.resolve() };
+
+      await build(llm, sender, undefined, noop).execute(PHONE, ["wamid.1"]);
+
+      expect(sender.sent.map((s) => s.body)).toEqual(["Olá"]);
+    });
   });
 });

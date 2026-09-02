@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { fakeLlmResponse } from "../../application/ports/llm-client.fake.ts";
 import type {
   LlmClientPort,
   LlmRequest,
   LlmResponse,
 } from "../../application/ports/llm-client.port.ts";
+import type {
+  LlmUsageEvent,
+  UsageRecorderPort,
+} from "../../application/ports/usage-recorder.port.ts";
 import { Conversation } from "../../domain/conversation.ts";
 import { RETRIEVED_CONTEXT_SEPARATOR } from "../../domain/reply-strategy.ts";
 import type { KnowledgeChunk } from "./knowledge.types.ts";
@@ -54,6 +59,16 @@ class StubLlm implements LlmClientPort {
   }
 }
 
+class RecordingUsageRecorder implements UsageRecorderPort {
+  events: LlmUsageEvent[] = [];
+  constructor(private readonly fail = false) {}
+
+  recordLlmCall(event: LlmUsageEvent): Promise<void> {
+    this.events.push(event);
+    return this.fail ? Promise.reject(new Error("falha ao registrar consumo")) : Promise.resolve();
+  }
+}
+
 function provider(
   llm: LlmClientPort,
   overrides: Partial<ConstructorParameters<typeof LexicalRetrievalBusinessContext>[0]> = {},
@@ -65,6 +80,7 @@ function provider(
     extractionModel: "claude-haiku-4-5-20251001",
     topK: 4,
     minScore: 0,
+    usageRecorder: new RecordingUsageRecorder(),
     synonyms: SYNONYMS,
     ...overrides,
   });
@@ -74,13 +90,15 @@ const conversation = Conversation.createNew("+5511999999999");
 
 describe("LexicalRetrievalBusinessContext", () => {
   it("chamada #1 OK: usa os sinais extraídos e devolve pinned + trechos recuperados", async () => {
-    const llm = new StubLlm({
-      text: JSON.stringify({
-        temas: ["presença"],
-        dores: ["controle de faltas"],
-        modulosProvaveis: ["equipes-presenca"],
-      }),
-    });
+    const llm = new StubLlm(
+      fakeLlmResponse(
+        JSON.stringify({
+          temas: ["presença"],
+          dores: ["controle de faltas"],
+          modulosProvaveis: ["equipes-presenca"],
+        }),
+      ),
+    );
     const p = provider(llm);
 
     const context = await p.getContext({ conversation, newMessages: ["preciso de ajuda"] });
@@ -107,9 +125,9 @@ describe("LexicalRetrievalBusinessContext", () => {
   });
 
   it("chamada #1 vazia: cai para extração local", async () => {
-    const llm = new StubLlm({
-      text: JSON.stringify({ temas: [], dores: [], modulosProvaveis: [] }),
-    });
+    const llm = new StubLlm(
+      fakeLlmResponse(JSON.stringify({ temas: [], dores: [], modulosProvaveis: [] })),
+    );
     const p = provider(llm);
 
     const context = await p.getContext({
@@ -122,9 +140,9 @@ describe("LexicalRetrievalBusinessContext", () => {
   });
 
   it("busca sem resultado: devolve só o conjunto pinned (sem separador)", async () => {
-    const llm = new StubLlm({
-      text: JSON.stringify({ temas: [], dores: [], modulosProvaveis: [] }),
-    });
+    const llm = new StubLlm(
+      fakeLlmResponse(JSON.stringify({ temas: [], dores: [], modulosProvaveis: [] })),
+    );
     const p = provider(llm);
 
     const context = await p.getContext({ conversation, newMessages: ["oi tudo bem"] });
@@ -143,9 +161,9 @@ describe("LexicalRetrievalBusinessContext", () => {
   });
 
   it("a chamada de extração NÃO pede intenção/qualificação e usa schema estruturado", async () => {
-    const llm = new StubLlm({
-      text: JSON.stringify({ temas: [], dores: [], modulosProvaveis: [] }),
-    });
+    const llm = new StubLlm(
+      fakeLlmResponse(JSON.stringify({ temas: [], dores: [], modulosProvaveis: [] })),
+    );
     const p = provider(llm);
     await p.getContext({ conversation, newMessages: ["oi"] });
 
@@ -158,5 +176,47 @@ describe("LexicalRetrievalBusinessContext", () => {
       (call.responseSchema as { properties: Record<string, unknown> }).properties,
     );
     expect(schemaKeys).toEqual(["temas", "dores", "modulosProvaveis"]);
+  });
+
+  describe("registro de consumo da chamada #1 (best-effort)", () => {
+    it("registra signal-extraction com o leadPhone da conversa quando a #1 retorna", async () => {
+      const llm = new StubLlm(
+        fakeLlmResponse(JSON.stringify({ temas: [], dores: [], modulosProvaveis: [] }), {
+          inputTokens: 42,
+        }),
+      );
+      const recorder = new RecordingUsageRecorder();
+      const p = provider(llm, { usageRecorder: recorder });
+
+      await p.getContext({ conversation, newMessages: ["oi"] });
+
+      expect(recorder.events).toHaveLength(1);
+      expect(recorder.events[0]).toMatchObject({
+        callType: "signal-extraction",
+        leadPhone: conversation.leadPhone,
+        usage: { inputTokens: 42 },
+      });
+    });
+
+    it("não registra quando a #1 lança (cai para extração local)", async () => {
+      const llm = new StubLlm(new Error("timeout na extração"));
+      const recorder = new RecordingUsageRecorder();
+      const p = provider(llm, { usageRecorder: recorder });
+
+      await p.getContext({ conversation, newMessages: ["controlar faltas"] });
+
+      expect(recorder.events).toHaveLength(0);
+    });
+
+    it("falha ao registrar consumo não quebra getContext", async () => {
+      const llm = new StubLlm(
+        fakeLlmResponse(JSON.stringify({ temas: [], dores: [], modulosProvaveis: [] })),
+      );
+      const p = provider(llm, { usageRecorder: new RecordingUsageRecorder(true) });
+
+      const context = await p.getContext({ conversation, newMessages: ["oi tudo bem"] });
+
+      expect(context).toBe(PINNED);
+    });
   });
 });

@@ -42,13 +42,17 @@ describe("openDatabase", () => {
 
   it("é idempotente entre aberturas: reabrir o mesmo arquivo não reaplica migrations", () => {
     const path = join(dir, "app.db");
-    openTracked(path).close();
+    const first = openTracked(path);
+    const countAfterFirstOpen = (
+      first.prepare("SELECT COUNT(*) AS n FROM schema_migrations").get() as { n: number }
+    ).n;
+    first.close();
     open.splice(0);
 
     const db = openTracked(path);
 
     const count = db.prepare("SELECT COUNT(*) AS n FROM schema_migrations").get() as { n: number };
-    expect(count.n).toBe(1);
+    expect(count.n).toBe(countAfterFirstOpen);
   });
 
   it("mantém foreign_keys em vigor — violação de FK é rejeitada", () => {
@@ -58,9 +62,7 @@ describe("openDatabase", () => {
         "CREATE TABLE child (id INTEGER PRIMARY KEY, parent_id INTEGER REFERENCES parent(id));",
     );
 
-    expect(() =>
-      db.prepare("INSERT INTO child (id, parent_id) VALUES (1, 999)").run(),
-    ).toThrow();
+    expect(() => db.prepare("INSERT INTO child (id, parent_id) VALUES (1, 999)").run()).toThrow();
   });
 
   it("abre em modo WAL quando o banco é persistido em arquivo", () => {

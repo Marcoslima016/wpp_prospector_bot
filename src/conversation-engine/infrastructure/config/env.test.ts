@@ -17,6 +17,7 @@ describe("loadConversationEngineEnv", () => {
       CONVERSATION_HISTORY_TURNS: 20,
       CONVERSATIONS_DIR: "./data/conversations",
       DATABASE_PATH: "./data/app.db",
+      LLM_USAGE_TRACKING_ENABLED: true,
       BOOT_SWEEP_MAX_AGE_MS: 3600000,
       KNOWLEDGE_DIR: "./src/conversation-engine/infrastructure/knowledge",
       RETRIEVAL_TOP_K: 6,
@@ -37,8 +38,10 @@ describe("loadConversationEngineEnv", () => {
       KNOWLEDGE_DIR: "/opt/knowledge",
       RETRIEVAL_TOP_K: "10",
       RETRIEVAL_MIN_SCORE: "1.5",
+      LLM_USAGE_TRACKING_ENABLED: "false",
     });
 
+    expect(env.LLM_USAGE_TRACKING_ENABLED).toBe(false);
     expect(env.LLM_MODEL).toBe("claude-opus-5");
     expect(env.EXTRACTION_LLM_MODEL).toBe("claude-sonnet-5");
     expect(env.CONVERSATION_BATCH_WINDOW_MS).toBe(5000);

@@ -29,9 +29,25 @@ export interface LlmRequest {
   responseSchema?: Record<string, unknown>;
 }
 
+/** Consumo de tokens reportado pelo provider para uma única chamada. */
+export interface LlmUsage {
+  /** Modelo efetivamente usado na chamada (pode diferir do alias pedido). */
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  /** Tokens de entrada lidos do cache de prompt. 0 quando não há cache. */
+  cacheReadTokens: number;
+  /** Tokens de entrada gravados no cache de prompt (cache creation). 0 quando não há cache. */
+  cacheWriteTokens: number;
+  /** `request-id` da Anthropic, quando o SDK o expõe na resposta. */
+  requestId?: string;
+}
+
 export interface LlmResponse {
   /** Texto bruto retornado pelo modelo. Quando há `responseSchema`, é o JSON serializado. */
   text: string;
+  /** Consumo de tokens desta chamada, para o registro de consumo (best-effort). */
+  usage: LlmUsage;
 }
 
 /** Abstração fina e agnóstica de provider para geração via LLM. */
