@@ -5,8 +5,23 @@ export interface LlmMessage {
   content: string;
 }
 
+/**
+ * Bloco do system prompt. `cacheable: true` marca o fim de um prefixo estável
+ * que o provider pode manter em cache (prompt caching). Só o último bloco
+ * cacheável precisa da marca — o cache é por prefixo.
+ */
+export interface LlmSystemBlock {
+  text: string;
+  cacheable?: boolean;
+}
+
 export interface LlmRequest {
-  system: string;
+  /**
+   * System prompt. String simples ou lista de blocos — a forma em blocos
+   * permite marcar o prefixo cacheável (persona + conteúdo fixo) separado do
+   * conteúdo variável recuperado.
+   */
+  system: string | LlmSystemBlock[];
   messages: LlmMessage[];
   model: string;
   maxTokens: number;

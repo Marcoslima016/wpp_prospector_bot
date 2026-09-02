@@ -73,4 +73,31 @@ describe("AnthropicLlmClient.generate", () => {
     const params = create.mock.calls[0]![0] as Record<string, unknown>;
     expect(params.output_config).toBeUndefined();
   });
+
+  it("mapeia system em blocos para text blocks com cache_control ephemeral no bloco cacheável", async () => {
+    const create = vi.fn().mockResolvedValue({ content: [{ type: "text", text: "{}" }] });
+
+    await clientWith(create).generate({
+      ...request,
+      system: [
+        { text: "PERSONA + PINNED", cacheable: true },
+        { text: "TRECHOS RECUPERADOS", cacheable: false },
+      ],
+    });
+
+    const params = create.mock.calls[0]![0] as Record<string, unknown>;
+    expect(params.system).toEqual([
+      { type: "text", text: "PERSONA + PINNED", cache_control: { type: "ephemeral" } },
+      { type: "text", text: "TRECHOS RECUPERADOS" },
+    ]);
+  });
+
+  it("mantém system como string quando não há blocos", async () => {
+    const create = vi.fn().mockResolvedValue({ content: [{ type: "text", text: "{}" }] });
+
+    await clientWith(create).generate(request);
+
+    const params = create.mock.calls[0]![0] as Record<string, unknown>;
+    expect(params.system).toBe("PROMPT");
+  });
 });

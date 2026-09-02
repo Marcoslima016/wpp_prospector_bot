@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
+import type { LlmSystemBlock } from "../application/ports/llm-client.port.ts";
 import { BotDecision } from "./bot-decision.ts";
 import { Conversation } from "./conversation.ts";
-import { ReplyStrategy } from "./reply-strategy.ts";
+import { ReplyStrategy, RETRIEVED_CONTEXT_SEPARATOR } from "./reply-strategy.ts";
+
+function systemBlocks(system: string | LlmSystemBlock[]): LlmSystemBlock[] {
+  if (typeof system === "string") throw new Error("esperado system em blocos");
+  return system;
+}
 
 const t0 = new Date("2026-08-27T12:00:00.000Z");
 
@@ -19,9 +25,36 @@ describe("ReplyStrategy.buildRequest", () => {
 
     const request = strategy().buildRequest(conversation, ["olá"]);
 
-    expect(request.system).toBe("PROMPT DE PROSPECÇÃO");
+    const blocks = systemBlocks(request.system);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toEqual({ text: "PROMPT DE PROSPECÇÃO", cacheable: true });
     expect(request.model).toBe("claude-sonnet-5");
     expect(request.responseSchema).toBeDefined();
+  });
+
+  it("compõe persona + pinned num bloco cacheável e os trechos recuperados num bloco separado", () => {
+    const conversation = Conversation.createNew("+5511999999999");
+    const businessContext = `PINNED-FIXO${RETRIEVED_CONTEXT_SEPARATOR}TRECHO-RECUPERADO`;
+
+    const blocks = systemBlocks(
+      strategy().buildRequest(conversation, ["quero controlar presença"], businessContext).system,
+    );
+
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0]!.cacheable).toBe(true);
+    expect(blocks[0]!.text).toBe("PROMPT DE PROSPECÇÃO\n\nPINNED-FIXO");
+    expect(blocks[1]).toEqual({ text: "TRECHO-RECUPERADO", cacheable: false });
+  });
+
+  it("sem separador, todo o contexto de negócio entra no bloco cacheável", () => {
+    const conversation = Conversation.createNew("+5511999999999");
+
+    const blocks = systemBlocks(
+      strategy().buildRequest(conversation, ["oi"], "APENAS-PINNED").system,
+    );
+
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toEqual({ text: "PROMPT DE PROSPECÇÃO\n\nAPENAS-PINNED", cacheable: true });
   });
 
   it("inclui no máximo N turnos recentes do histórico", () => {

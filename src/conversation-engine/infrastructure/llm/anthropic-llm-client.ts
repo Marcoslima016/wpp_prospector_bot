@@ -4,6 +4,7 @@ import type {
   LlmClientPort,
   LlmRequest,
   LlmResponse,
+  LlmSystemBlock,
 } from "../../application/ports/llm-client.port.ts";
 
 export interface AnthropicLlmClientConfig {
@@ -39,7 +40,7 @@ export class AnthropicLlmClient implements LlmClientPort {
       const params: Anthropic.MessageCreateParamsNonStreaming = {
         model: request.model,
         max_tokens: request.maxTokens,
-        system: request.system,
+        system: toAnthropicSystem(request.system),
         messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
         ...(request.responseSchema
           ? {
@@ -70,4 +71,21 @@ export class AnthropicLlmClient implements LlmClientPort {
 
     return { text };
   }
+}
+
+/**
+ * Converte o `system` do `LlmRequest` para o formato da Anthropic. String →
+ * string (sem cache). Blocos → array de `text` blocks, com `cache_control`
+ * ephemeral no bloco marcado como `cacheable` (breakpoint de prompt caching).
+ */
+function toAnthropicSystem(system: string | LlmSystemBlock[]): string | Anthropic.TextBlockParam[] {
+  if (typeof system === "string") return system;
+
+  return system
+    .filter((block) => block.text.trim().length > 0)
+    .map((block) => ({
+      type: "text" as const,
+      text: block.text,
+      ...(block.cacheable ? { cache_control: { type: "ephemeral" as const } } : {}),
+    }));
 }
