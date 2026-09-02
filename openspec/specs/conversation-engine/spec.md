@@ -16,6 +16,12 @@ composição. O contexto de negócio SHALL ser obtido antes da chamada de geraç
 e SHALL ser fornecido ao motor por uma abstração substituível (não acoplada a uma técnica
 de recuperação específica).
 
+Cada chamada ao LLM feita neste fluxo — tanto a consulta que gera a decisão quanto a
+consulta que extrai os sinais de busca — SHALL ter seu consumo de tokens registrado
+(ver a capability `consumption-metrics`). O registro é best-effort: NÃO SHALL alterar a
+decisão produzida, o texto enviado ao lead, nem o comportamento de nova tentativa e
+registro de erro já definidos; uma falha ao registrar o consumo SHALL ser apenas logada.
+
 #### Scenario: Mensagem interpretada com sucesso
 
 - **WHEN** uma mensagem de um lead é processada, o contexto de negócio é recuperado e o LLM responde no formato esperado
@@ -35,6 +41,16 @@ de recuperação específica).
 
 - **WHEN** a recuperação do contexto de negócio não retorna nenhum trecho específico para as mensagens do lead
 - **THEN** o sistema ainda gera a decisão usando o conhecimento fixo obrigatório (posicionamento, guardrails e planos/preços) e o histórico, sem falhar o turno
+
+#### Scenario: Consumo de cada chamada ao LLM registrado
+
+- **WHEN** o fluxo de interpretação executa a consulta de extração de sinais e a consulta de geração da decisão para um lead
+- **THEN** o consumo de tokens de cada uma dessas chamadas é registrado como um evento de consumo, sem alterar a decisão nem o envio da resposta
+
+#### Scenario: Falha ao registrar consumo não afeta a interpretação
+
+- **WHEN** o registro do consumo de uma chamada ao LLM falha
+- **THEN** o sistema registra o erro em log e a interpretação e o envio da resposta ao lead seguem normalmente
 
 ### Requirement: Formato Estruturado da Decisão do Bot
 
