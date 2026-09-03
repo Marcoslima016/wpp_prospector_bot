@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "description": "Bot de WhatsApp para prospecção de clientes via WhatsApp Cloud API",
   "main": "dist/main.js",
+  "exports": {
+    ".": "./dist/main.js",
+    "./contracts": {
+      "types": "./dist/management/interface/dto/index.d.ts",
+      "development": "./src/management/interface/dto/index.ts",
+      "default": "./dist/management/interface/dto/index.js"
+    }
+  },
   "scripts": {
     "dev": "node --watch --experimental-transform-types --env-file-if-exists=.env src/main.ts",
     "build": "tsc",

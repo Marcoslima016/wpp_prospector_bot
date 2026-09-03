@@ -54,3 +54,19 @@ O banco abre em `journal_mode = WAL`, então convivem `app.db`, `app.db-wal` e `
 Um backup consistente precisa capturar os três juntos **ou** executar
 `PRAGMA wal_checkpoint(TRUNCATE)` antes do snapshot (alternativa: replicação contínua com
 Litestream). `data/` está no `.gitignore`.
+
+## Contratos da API de gestão (`./contracts`)
+
+O subcaminho `wpp_prospector_bot_server/contracts` (campo `exports` do `package.json`) é a
+**superfície pública** consumida pela SPA de gestão (`applications/wpp_prospector_bot_panel/`):
+o barrel `src/management/interface/dto/index.ts` reexporta os schemas zod versionados
+(item de lista de conversa, detalhe, série de consumo, contadores do estado atual), os
+schemas de query e a constante `MANAGEMENT_CONTRACT_VERSION`.
+
+- Em dev/typecheck resolve para o fonte `.ts`; no build (`default`) resolve para
+  `dist/management/interface/dto/index.js` — então **buildar o servidor antes** do build da
+  SPA quando o contrato muda.
+- Ao alterar a forma de qualquer DTO de modo incompatível, faça **bump de
+  `MANAGEMENT_CONTRACT_VERSION`** (em `src/management/interface/dto/common.ts`). A SPA fixa
+  essa versão em build e sinaliza incompatibilidade quando uma resposta não valida contra o
+  contrato conhecido.
