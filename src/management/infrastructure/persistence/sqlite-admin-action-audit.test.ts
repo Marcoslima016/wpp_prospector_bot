@@ -83,4 +83,18 @@ describe("SqliteAdminActionAudit", () => {
 
     expect(rows().map((r) => r.action)).toEqual(["handoff", "resume", "send-message"]);
   });
+
+  it("grava a ação reset_prospecting", async () => {
+    db = openDatabase(":memory:");
+    const audit = new SqliteAdminActionAudit(db, fakeLogger());
+
+    await audit.record({
+      actor: "operator",
+      action: "reset_prospecting",
+      leadPhone: "+5511988887777",
+      occurredAt: new Date("2026-09-03T15:00:00.000Z"),
+    });
+
+    expect(rows().map((r) => r.action)).toEqual(["reset_prospecting"]);
+  });
 });

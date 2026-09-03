@@ -46,6 +46,17 @@ export class FirstContactTemplateNotConfiguredError extends Error {
   }
 }
 
+/** O lote enviado a um endpoint de leads em massa excede o limite configurado. */
+export class LeadBatchTooLargeError extends Error {
+  constructor(
+    readonly received: number,
+    readonly max: number,
+  ) {
+    super(`Lote de ${received} itens acima do limite de ${max}`);
+    this.name = "LeadBatchTooLargeError";
+  }
+}
+
 /** O gateway do WhatsApp rejeitou o envio do template de primeiro contato. */
 export class ProspectingGatewayError extends Error {
   constructor(

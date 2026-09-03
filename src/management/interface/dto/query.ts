@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { conversationStateSchema, isoDateStringSchema, leadIntentSchema } from "./common.ts";
+import {
+  conversationStateSchema,
+  isoDateStringSchema,
+  leadIntentSchema,
+  prospectingStateSchema,
+} from "./common.ts";
 import { consumptionGroupBySchema } from "./consumption.dto.ts";
 
 /** Teto de itens por página da listagem de conversas. */
@@ -26,6 +31,23 @@ export const conversationListQuerySchema = z.object({
 });
 
 export type ConversationListQuery = z.infer<typeof conversationListQuerySchema>;
+
+/** Teto de itens por página da listagem de leads. */
+export const LEADS_PAGE_MAX = 100;
+export const LEADS_PAGE_DEFAULT = 25;
+
+/** Query de `GET /admin/api/leads`. Valores chegam como string (querystring). */
+export const leadListQuerySchema = z.object({
+  state: prospectingStateSchema.optional(),
+  /** Trecho do telefone do lead (match parcial). */
+  phone: z.string().trim().min(1).optional(),
+  segment: z.string().trim().min(1).optional(),
+  limit: z.coerce.number().int().positive().max(LEADS_PAGE_MAX).default(LEADS_PAGE_DEFAULT),
+  /** Cursor opaco devolvido em `nextCursor` da página anterior. */
+  cursor: z.string().min(1).optional(),
+});
+
+export type LeadListQuery = z.infer<typeof leadListQuerySchema>;
 
 /** Query de `GET /admin/api/stats/consumption`. */
 export const consumptionQuerySchema = z.object({

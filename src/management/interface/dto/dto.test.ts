@@ -9,7 +9,15 @@ import {
   sendMessageResultSchema,
 } from "./conversation-actions.dto.ts";
 import { conversationDetailSchema, conversationListPageSchema } from "./conversation.dto.ts";
-import { prospectLeadResultSchema, registerLeadResultSchema } from "./lead.dto.ts";
+import {
+  bulkProspectResultSchema,
+  importLeadsInputSchema,
+  importLeadsResultSchema,
+  leadListPageSchema,
+  prospectLeadResultSchema,
+  registerLeadResultSchema,
+  resetLeadResultSchema,
+} from "./lead.dto.ts";
 import { consumptionSeriesSchema } from "./consumption.dto.ts";
 import { EMPTY_OVERVIEW, overviewSchema } from "./overview.dto.ts";
 
@@ -188,6 +196,9 @@ describe("DTOs de gestão", () => {
     displayName: "Ana",
     source: null,
     notes: null,
+    company: null,
+    segment: null,
+    city: null,
     prospectingState: "pending",
     firstContactAt: null,
     repliedAt: null,
@@ -223,6 +234,67 @@ describe("DTOs de gestão", () => {
       lead: { ...leadResource, prospectingState: "sent" },
     };
     expect(prospectLeadResultSchema.safeParse(result).success).toBe(true);
+  });
+
+  it("leadListPageSchema aceita uma página com item completo e cursor", () => {
+    const page = {
+      items: [{ ...leadResource, company: "Obras SA", segment: "construção", city: "Ribeirão Preto" }],
+      pageSize: 25,
+      nextCursor: "eyJrIjoiIiwicCI6IiJ9",
+    };
+    expect(leadListPageSchema.safeParse(page).success).toBe(true);
+  });
+
+  it("leadListPageSchema rejeita item sem os campos de contexto de importação", () => {
+    const { company: _c, ...withoutCompany } = leadResource;
+    const page = { items: [withoutCompany], pageSize: 25, nextCursor: null };
+    expect(leadListPageSchema.safeParse(page).success).toBe(false);
+  });
+
+  it("importLeadsInputSchema aceita um lote com campos de contexto opcionais", () => {
+    const input = {
+      leads: [
+        { phone: "+5516991178924", company: "Obras SA", segment: "construção", city: "RP" },
+        { phone: "+5516997379471" },
+      ],
+    };
+    expect(importLeadsInputSchema.safeParse(input).success).toBe(true);
+  });
+
+  it("importLeadsResultSchema aceita totais + rejeitados com linha de origem", () => {
+    const result = {
+      imported: 2,
+      updated: 1,
+      rejected: [
+        { row: 4, phone: "", reason: "vazio" },
+        { row: 7, phone: "1639134635", reason: "fixo" },
+      ],
+    };
+    expect(importLeadsResultSchema.safeParse(result).success).toBe(true);
+  });
+
+  it("bulkProspectResultSchema aceita desfechos mistos por telefone", () => {
+    const result = {
+      results: [
+        { phone: "+5516991178924", outcome: "sent", wamid: "wamid.1", lead: { ...leadResource, prospectingState: "sent" } },
+        { phone: "+5516997379471", outcome: "skipped", lead: { ...leadResource, prospectingState: "sent" } },
+        { phone: "+5516990000000", outcome: "failed", reason: "lead_not_found", lead: null },
+      ],
+    };
+    expect(bulkProspectResultSchema.safeParse(result).success).toBe(true);
+  });
+
+  it("bulkProspectResultSchema rejeita outcome fora do enum", () => {
+    const result = {
+      results: [{ phone: "+5516991178924", outcome: "queued", lead: null }],
+    };
+    expect(bulkProspectResultSchema.safeParse(result).success).toBe(false);
+  });
+
+  it("resetLeadResultSchema aceita o lead de volta em pending", () => {
+    expect(
+      resetLeadResultSchema.safeParse({ ...leadResource, prospectingState: "pending" }).success,
+    ).toBe(true);
   });
 
   it("conversationDetailOutboundTurn aceita `kind: \"prospecting\"` em turno de operador", () => {

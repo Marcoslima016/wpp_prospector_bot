@@ -13,6 +13,7 @@
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",
+        "group": "dev",
         "clear": true
       },
       "problemMatcher": {
@@ -33,10 +34,7 @@
           "endsPattern": ".*Servidor iniciado.*"
         }
       },
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
+      "group": "build",
       "runOptions": {
         "instanceLimit": 1
       }
@@ -89,6 +87,54 @@
         "reveal": "always",
         "panel": "shared",
         "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Iniciar painel (dev)",
+      "detail": "Sobe o Vite dev server da SPA de gestão (wpp_prospector_bot_panel, npm run dev) em http://localhost:5173/admin/. Faz proxy de /admin/api para o servidor (:3000).",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/../wpp_prospector_bot_panel"
+      },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev",
+        "clear": true
+      },
+      "problemMatcher": {
+        "owner": "wpp-prospector-bot-panel",
+        "source": "vite",
+        "fileLocation": ["relative", "${workspaceFolder}/../wpp_prospector_bot_panel"],
+        "pattern": {
+          "regexp": "^\\s*(.+?):(\\d+):(\\d+)\\s+-\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*(hmr update|page reload|restarting|rebuilding).*",
+          "endsPattern": ".*(ready in|Local:\\s+https?://).*"
+        }
+      },
+      "runOptions": {
+        "instanceLimit": 1
+      }
+    },
+    {
+      "label": "Iniciar servidor + painel (dev)",
+      "detail": "Sobe o servidor Fastify (:3000) e o Vite dev server da SPA (:5173) em paralelo. Depois abra http://localhost:5173/admin/ e faça login com o valor de ADMIN_ACCESS_SECRET.",
+      "dependsOn": ["Iniciar servidor (dev)", "Iniciar painel (dev)"],
+      "dependsOrder": "parallel",
+      "group": {
+        "kind": "build",
+        "isDefault": true
       },
       "problemMatcher": []
     }

@@ -5,15 +5,19 @@ import type { ConversationRepositoryPort } from "../../../conversation-engine/ap
 import type { LeadSerialQueue } from "../../../conversation-engine/infrastructure/inbound/lead-serial-queue.ts";
 import type { SendOutboundMessageUseCase } from "../../../whatsapp-connectivity/application/use-cases/send-outbound-message.use-case.ts";
 import type { SendTextMessageUseCase } from "../../../whatsapp-connectivity/application/use-cases/send-text-message.use-case.ts";
+import { BulkProspectLeadsUseCase } from "../../application/bulk-prospect-leads.use-case.ts";
 import { ConversationActionUseCase } from "../../application/conversation-action.use-case.ts";
+import { ImportLeadsUseCase } from "../../application/import-leads.use-case.ts";
 import { ProspectLeadUseCase } from "../../application/prospect-lead.use-case.ts";
 import { RegisterLeadUseCase } from "../../application/register-lead.use-case.ts";
+import { ResetLeadProspectingUseCase } from "../../application/reset-lead-prospecting.use-case.ts";
 import type { AdminActionAuditPort } from "../../application/ports/admin-action-audit.port.ts";
 import type { LeadRepositoryPort } from "../../application/ports/lead-repository.port.ts";
 import { ConsumptionStatsService } from "../../application/consumption-stats.service.ts";
 import type { Logger } from "../../application/ports/logger.port.ts";
 import type { ResolvedAdminConfig } from "../config/env.ts";
 import { ConversationIndexQueries } from "../persistence/conversation-index-queries.ts";
+import { registerAdminCapabilitiesRoutes } from "./admin-capabilities.routes.ts";
 import { registerAdminConversationActionsRoutes } from "./admin-conversation-actions.routes.ts";
 import { registerAdminConversationsRoutes } from "./admin-conversations.routes.ts";
 import { registerAdminLeadsRoutes } from "./admin-leads.routes.ts";
@@ -77,6 +81,14 @@ export const registerAdminRoutes: FastifyPluginAsync<AdminRoutesDeps> = async (a
     logger: deps.logger,
     clock,
   });
+  const importLeads = new ImportLeadsUseCase({ leads: deps.leads });
+  const bulkProspect = new BulkProspectLeadsUseCase({ prospectLead, leads: deps.leads });
+  const resetLead = new ResetLeadProspectingUseCase({
+    leads: deps.leads,
+    audit: deps.audit,
+    logger: deps.logger,
+    clock,
+  });
   const cookiePath = app.prefix !== "" ? app.prefix : "/";
 
   await app.register(registerAdminSessionRoutes, {
@@ -91,7 +103,18 @@ export const registerAdminRoutes: FastifyPluginAsync<AdminRoutesDeps> = async (a
     repository: deps.repository,
   });
   await app.register(registerAdminConversationActionsRoutes, { conversationActions });
-  await app.register(registerAdminLeadsRoutes, { registerLead, prospectLead });
+  await app.register(registerAdminLeadsRoutes, {
+    registerLead,
+    prospectLead,
+    importLeads,
+    bulkProspect,
+    resetLead,
+    leads: deps.leads,
+  });
+  await app.register(registerAdminCapabilitiesRoutes, {
+    conversationActions: true,
+    prospecting: true,
+  });
   await app.register(registerAdminStatsRoutes, { consumptionStats, queries });
 
   await applyAdminStatic(app, { webDistDir: deps.config.webDistDir, logger: deps.logger });

@@ -13,5 +13,6 @@ export * from "./query.ts";
 export * from "./conversation.dto.ts";
 export * from "./conversation-actions.dto.ts";
 export * from "./lead.dto.ts";
+export * from "./capabilities.dto.ts";
 export * from "./consumption.dto.ts";
 export * from "./overview.dto.ts";
