@@ -1,5 +1,5 @@
 /** Tipo de ação de operação sobre uma conversa, registrada na auditoria. */
-export type AdminActionType = "handoff" | "resume" | "send-message";
+export type AdminActionType = "handoff" | "resume" | "send-message" | "prospect";
 
 export interface AdminActionEntry {
   /** Autor da ação. Fixo em `"operator"` enquanto não houver múltiplos usuários. */

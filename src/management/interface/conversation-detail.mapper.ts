@@ -43,6 +43,8 @@ export function toConversationDetail(conversation: Conversation): ConversationDe
         text: turn.text,
         timestamp: turn.timestamp,
         origin: turn.origin ?? "bot",
+        // `kind` só faz sentido em turnos de operador; ausente ⇒ mensagem avulsa.
+        kind: (turn.origin ?? "bot") === "operator" ? (turn.kind ?? "manual") : undefined,
         leadIntent: turn.leadIntent,
         leadQualification: turn.leadQualification,
         reasoning: turn.reasoning,

@@ -270,6 +270,45 @@ describe("Conversation", () => {
     });
   });
 
+  describe("primeiro contato de prospecção (recordProspectingOutboundTurn)", () => {
+    it("em uma conversa nova adiciona um único turno de operador com kind `prospecting`, sem mudar estado nem status do lead", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+
+      conversation.recordProspectingOutboundTurn("Olá! Aqui é a Obra na Mão.", t0);
+
+      expect(conversation.turns).toHaveLength(1);
+      const turn = conversation.turns[0]!;
+      expect(turn.direction).toBe("outbound");
+      expect(turn.origin).toBe("operator");
+      expect(turn.kind).toBe("prospecting");
+      expect(conversation.state).toBe("active");
+      expect(conversation.leadIntent).toBe("unknown");
+      expect(conversation.leadQualification).toBeNull();
+    });
+
+    it("em uma conversa existente apenas acrescenta o turno", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.recordInboundTurn({ text: "oi", timestamp: t0, messageId: "wamid.1" });
+      conversation.applyDecision(decision({ replyMessages: ["Olá!"] }), t0);
+
+      conversation.recordProspectingOutboundTurn("segundo contato via template", t0);
+
+      const kinds = conversation.turns
+        .filter((turn) => turn.direction === "outbound")
+        .map((turn) => turn.kind);
+      expect(kinds).toEqual([undefined, "prospecting"]);
+    });
+
+    it("round-trip preserva o kind `prospecting`", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.recordProspectingOutboundTurn("template olá", t0);
+
+      const restored = Conversation.fromJSON(JSON.parse(JSON.stringify(conversation.toJSON())));
+
+      expect(restored.turns[0]!.kind).toBe("prospecting");
+    });
+  });
+
   it("carrega uma conversa salva antes desta mudança (sem os campos novos) sem erro", () => {
     const legacy = {
       leadPhone: "+5511999999999",

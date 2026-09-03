@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { LeadSerialQueue } from "../../../conversation-engine/infrastructure/inbound/lead-serial-queue.ts";
 import type { ResolvedAdminConfig } from "../../../management/infrastructure/config/env.ts";
 import { SqliteAdminActionAudit } from "../../../management/infrastructure/persistence/sqlite-admin-action-audit.ts";
+import { SqliteLeadRepository } from "../../../management/infrastructure/persistence/sqlite-lead-repository.ts";
+import { FakeSendTemplateMessageUseCase } from "../../../management/test-support/fake-send-template-message.ts";
 import { FakeSendTextMessageUseCase } from "../../../management/test-support/fake-send-text-message.ts";
 import { InMemoryConversationRepository } from "../../../management/test-support/in-memory-conversation-repository.ts";
 import { openDatabase } from "../../../shared/persistence/sqlite/open-database.ts";
@@ -38,12 +40,15 @@ function adminDeps() {
     sessionSecret: "s",
     sessionTtlMs: 1000,
     webDistDir: "./__no_dist__",
+    firstContactTemplate: { name: "primeiro_contato", lang: "pt_BR", paramKeys: [] },
   };
   return {
     config,
     db,
     repository: new InMemoryConversationRepository(),
     sendText: new FakeSendTextMessageUseCase().asUseCase(),
+    sendTemplate: new FakeSendTemplateMessageUseCase().asUseCase(),
+    leads: new SqliteLeadRepository(db, webhookDeps.logger),
     queue: new LeadSerialQueue(),
     audit: new SqliteAdminActionAudit(db, webhookDeps.logger),
     logger: webhookDeps.logger,

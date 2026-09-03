@@ -9,6 +9,7 @@ import {
   sendMessageResultSchema,
 } from "./conversation-actions.dto.ts";
 import { conversationDetailSchema, conversationListPageSchema } from "./conversation.dto.ts";
+import { prospectLeadResultSchema, registerLeadResultSchema } from "./lead.dto.ts";
 import { consumptionSeriesSchema } from "./consumption.dto.ts";
 import { EMPTY_OVERVIEW, overviewSchema } from "./overview.dto.ts";
 
@@ -180,5 +181,73 @@ describe("DTOs de gestão", () => {
   it("EMPTY_OVERVIEW bate com overviewSchema", () => {
     expect(overviewSchema.safeParse(EMPTY_OVERVIEW).success).toBe(true);
     expect(EMPTY_OVERVIEW.conversationsByState).toEqual({ active: 0, ended: 0, awaitingHuman: 0 });
+  });
+
+  const leadResource = {
+    phone: "+5511988887777",
+    displayName: "Ana",
+    source: null,
+    notes: null,
+    prospectingState: "pending",
+    firstContactAt: null,
+    repliedAt: null,
+  };
+
+  it("registerLeadResultSchema aceita um lead recém-cadastrado", () => {
+    expect(registerLeadResultSchema.safeParse(leadResource).success).toBe(true);
+  });
+
+  it("registerLeadResultSchema rejeita `prospectingState` fora do enum", () => {
+    expect(
+      registerLeadResultSchema.safeParse({ ...leadResource, prospectingState: "queued" }).success,
+    ).toBe(false);
+  });
+
+  it("prospectLeadResultSchema aceita o disparo com wamid e o lead em sent", () => {
+    const result = {
+      wamid: "wamid.tmpl.1",
+      alreadyProspected: false,
+      lead: {
+        ...leadResource,
+        prospectingState: "sent",
+        firstContactAt: "2026-09-03T12:00:00.000Z",
+      },
+    };
+    expect(prospectLeadResultSchema.safeParse(result).success).toBe(true);
+  });
+
+  it("prospectLeadResultSchema aceita wamid null com alreadyProspected true (idempotência)", () => {
+    const result = {
+      wamid: null,
+      alreadyProspected: true,
+      lead: { ...leadResource, prospectingState: "sent" },
+    };
+    expect(prospectLeadResultSchema.safeParse(result).success).toBe(true);
+  });
+
+  it("conversationDetailOutboundTurn aceita `kind: \"prospecting\"` em turno de operador", () => {
+    const detail = {
+      leadPhone: "+5511988887777",
+      state: "active",
+      leadIntent: "unknown",
+      leadQualification: null,
+      recommendedModules: [],
+      interestedModules: [],
+      quotedPlan: null,
+      hasPendingInbound: false,
+      hasAbandonedInbound: false,
+      turnCount: 1,
+      lastActivityAt: "2026-09-03T12:00:00.000Z",
+      turns: [
+        {
+          direction: "outbound",
+          text: "[primeiro contato]",
+          timestamp: "2026-09-03T12:00:00.000Z",
+          origin: "operator",
+          kind: "prospecting",
+        },
+      ],
+    };
+    expect(conversationDetailSchema.safeParse(detail).success).toBe(true);
   });
 });

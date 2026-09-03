@@ -1,4 +1,14 @@
 import { z } from "zod";
+import type { FirstContactTemplateConfig } from "../../application/first-contact-template.ts";
+
+/** `"a, b ,c"` → `["a", "b", "c"]`; vazio/ausente → `[]`. */
+function parseCsv(value: string | undefined): string[] {
+  if (value === undefined) return [];
+  return value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
 
 const envSchema = z
   .object({
@@ -19,6 +29,14 @@ const envSchema = z
     // Diretório do build da SPA de gestão, relativo ao diretório do processo.
     // Servido sob `/admin` só quando existir (a UI chega em outra change).
     ADMIN_WEB_DIST_DIR: z.string().min(1).default("../wpp_prospector_bot_panel/dist"),
+    // Nome do template aprovado usado como primeiro contato de prospecção
+    // (`POST /admin/api/leads/:leadPhone/prospect`). Obrigatório quando `ADMIN_ENABLED=true`.
+    PROSPECTING_TEMPLATE_NAME: z.string().min(1).optional(),
+    // Idioma do template de primeiro contato (código BCP-47 aceito pela Cloud API).
+    PROSPECTING_TEMPLATE_LANG: z.string().min(1).default("pt_BR"),
+    // Nomes ordenados dos parâmetros do template, separados por vírgula. Dão a
+    // ordem posicional ao mapear um objeto `{ nome: valor }` do corpo do disparo.
+    PROSPECTING_TEMPLATE_PARAM_KEYS: z.string().optional(),
   })
   .refine(
     (value) =>
@@ -29,7 +47,11 @@ const envSchema = z
         "ADMIN_ACCESS_SECRET e ADMIN_SESSION_SECRET são obrigatórios quando ADMIN_ENABLED=true",
       path: ["ADMIN_ACCESS_SECRET"],
     },
-  );
+  )
+  .refine((value) => !value.ADMIN_ENABLED || value.PROSPECTING_TEMPLATE_NAME !== undefined, {
+    error: "PROSPECTING_TEMPLATE_NAME é obrigatório quando ADMIN_ENABLED=true",
+    path: ["PROSPECTING_TEMPLATE_NAME"],
+  });
 
 export type ManagementEnv = z.infer<typeof envSchema>;
 
@@ -42,6 +64,8 @@ export interface ResolvedAdminConfig {
   sessionSecret: string;
   sessionTtlMs: number;
   webDistDir: string;
+  /** Template aprovado do primeiro contato de prospecção. */
+  firstContactTemplate: FirstContactTemplateConfig;
 }
 
 /**
@@ -50,10 +74,14 @@ export interface ResolvedAdminConfig {
  */
 export function resolveAdminConfig(env: ManagementEnv): ResolvedAdminConfig | null {
   if (!env.ADMIN_ENABLED) return null;
-  if (env.ADMIN_ACCESS_SECRET === undefined || env.ADMIN_SESSION_SECRET === undefined) {
-    // Inalcançável: o `refine` do schema já falha o parse. Guardado para o type-narrowing.
+  if (
+    env.ADMIN_ACCESS_SECRET === undefined ||
+    env.ADMIN_SESSION_SECRET === undefined ||
+    env.PROSPECTING_TEMPLATE_NAME === undefined
+  ) {
+    // Inalcançável: os `refine` do schema já falham o parse. Guardado para o type-narrowing.
     throw new Error(
-      "Configuração /admin inconsistente: segredos ausentes com ADMIN_ENABLED=true",
+      "Configuração /admin inconsistente: segredos ou template de prospecção ausentes com ADMIN_ENABLED=true",
     );
   }
   return {
@@ -61,6 +89,11 @@ export function resolveAdminConfig(env: ManagementEnv): ResolvedAdminConfig | nu
     sessionSecret: env.ADMIN_SESSION_SECRET,
     sessionTtlMs: env.ADMIN_SESSION_TTL_MS,
     webDistDir: env.ADMIN_WEB_DIST_DIR,
+    firstContactTemplate: {
+      name: env.PROSPECTING_TEMPLATE_NAME,
+      lang: env.PROSPECTING_TEMPLATE_LANG,
+      paramKeys: parseCsv(env.PROSPECTING_TEMPLATE_PARAM_KEYS),
+    },
   };
 }
 

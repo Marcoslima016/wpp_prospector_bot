@@ -6,6 +6,7 @@ import {
   leadIntentSchema,
   leadQualificationSchema,
   moduleIdSchema,
+  outboundTurnKindSchema,
   outboundTurnOriginSchema,
 } from "./common.ts";
 
@@ -46,12 +47,15 @@ export const conversationDetailInboundTurnSchema = z.object({
 /**
  * Turno outbound no detalhe da conversa. `origin` é obrigatório — o mapper
  * sempre o preenche (default `"bot"` para turnos gravados antes desta mudança).
+ * `kind` só vem em turnos de origem `operator` (`"manual"` avulsa | `"prospecting"`
+ * primeiro contato); ausente nos turnos do bot.
  */
 export const conversationDetailOutboundTurnSchema = z.object({
   direction: z.literal("outbound"),
   text: z.string(),
   timestamp: isoDateStringSchema,
   origin: outboundTurnOriginSchema,
+  kind: outboundTurnKindSchema.optional(),
   leadIntent: leadIntentSchema.optional(),
   leadQualification: leadQualificationSchema.nullable().optional(),
   reasoning: z.string().nullable().optional(),

@@ -10,6 +10,13 @@ export type TurnDirection = "inbound" | "outbound";
  */
 export type OutboundTurnOrigin = "bot" | "operator";
 
+/**
+ * Natureza de um turno outbound escrito por um operador: uma mensagem avulsa
+ * ("manual") ou o primeiro contato de prospecção com template ("prospecting").
+ * Ausente ⇒ `"manual"` (retrocompat) e só faz sentido em turnos de origem `operator`.
+ */
+export type OutboundTurnKind = "manual" | "prospecting";
+
 export interface InboundTurnProps {
   text: string;
   timestamp: Date;
@@ -32,6 +39,8 @@ export interface OutboundTurnProps {
 export interface ManualOutboundTurnProps {
   text: string;
   timestamp: Date;
+  /** `"manual"` (avulsa) por padrão; `"prospecting"` para o primeiro contato com template. */
+  kind?: OutboundTurnKind;
 }
 
 interface SerializedTurn {
@@ -48,6 +57,7 @@ interface SerializedTurn {
   interestedModules?: ModuleId[];
   quotedPlan?: CommercialPlan | null;
   origin?: OutboundTurnOrigin;
+  kind?: OutboundTurnKind;
 }
 
 /**
@@ -70,6 +80,8 @@ export class ConversationTurn {
   readonly quotedPlan: CommercialPlan | null;
   /** Origem de um turno outbound (`"bot"` por padrão); `undefined` em turnos inbound. */
   readonly origin?: OutboundTurnOrigin;
+  /** Natureza de um turno outbound de operador (`"manual"` por padrão); `undefined` fora disso. */
+  readonly kind?: OutboundTurnKind;
 
   private constructor(props: {
     direction: TurnDirection;
@@ -85,6 +97,7 @@ export class ConversationTurn {
     interestedModules?: ModuleId[];
     quotedPlan?: CommercialPlan | null;
     origin?: OutboundTurnOrigin;
+    kind?: OutboundTurnKind;
   }) {
     this.direction = props.direction;
     this.text = props.text;
@@ -99,6 +112,10 @@ export class ConversationTurn {
     this.interestedModules = props.interestedModules ?? [];
     this.quotedPlan = props.quotedPlan ?? null;
     this.origin = props.direction === "outbound" ? (props.origin ?? "bot") : undefined;
+    this.kind =
+      props.direction === "outbound" && (props.origin ?? "bot") === "operator"
+        ? (props.kind ?? "manual")
+        : undefined;
   }
 
   static inbound(props: InboundTurnProps): ConversationTurn {
@@ -142,7 +159,17 @@ export class ConversationTurn {
       interestedModules: [],
       quotedPlan: null,
       origin: "operator",
+      kind: props.kind ?? "manual",
     });
+  }
+
+  /**
+   * Turno outbound do primeiro contato de prospecção — um template aprovado
+   * disparado pelo operador antes de qualquer inbound. Origem `operator`,
+   * `kind: "prospecting"`, sem metadados de decisão.
+   */
+  static prospectingOutbound(props: Omit<ManualOutboundTurnProps, "kind">): ConversationTurn {
+    return ConversationTurn.manualOutbound({ ...props, kind: "prospecting" });
   }
 
   get pendingDecision(): boolean {
@@ -181,6 +208,8 @@ export class ConversationTurn {
       serialized.interestedModules = [...this.interestedModules];
       serialized.quotedPlan = this.quotedPlan;
       serialized.origin = this.origin ?? "bot";
+      // `"manual"` é o default — só serializa quando é o primeiro contato de prospecção.
+      if (this.kind === "prospecting") serialized.kind = "prospecting";
     }
 
     return serialized;
@@ -203,6 +232,9 @@ export class ConversationTurn {
       quotedPlan: raw.quotedPlan ?? null,
       // Retrocompat: turno outbound sem `origin` gravado é do bot.
       origin: raw.origin ?? "bot",
+      // Retrocompat: turno de operador sem `kind` gravado é mensagem avulsa (o
+      // construtor aplica o default `"manual"` só para turnos de origem `operator`).
+      kind: raw.kind,
     });
   }
 }

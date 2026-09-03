@@ -10,7 +10,9 @@ import { LeadSerialQueue } from "../conversation-engine/infrastructure/inbound/l
 import { ConversationIndexProjection } from "./infrastructure/persistence/conversation-index-projection.ts";
 import { IndexingConversationRepository } from "./infrastructure/persistence/indexing-conversation-repository.ts";
 import { SqliteAdminActionAudit } from "./infrastructure/persistence/sqlite-admin-action-audit.ts";
+import { SqliteLeadRepository } from "./infrastructure/persistence/sqlite-lead-repository.ts";
 import { buildConversation } from "./test-support/conversation-fixtures.ts";
+import { FakeSendTemplateMessageUseCase } from "./test-support/fake-send-template-message.ts";
 import { FakeSendTextMessageUseCase } from "./test-support/fake-send-text-message.ts";
 import { InMemoryConversationRepository } from "./test-support/in-memory-conversation-repository.ts";
 
@@ -22,6 +24,7 @@ const config: ResolvedAdminConfig = {
   sessionSecret: "integration-session-secret",
   sessionTtlMs: 60_000,
   webDistDir: "./__no_dist__",
+  firstContactTemplate: { name: "primeiro_contato", lang: "pt_BR", paramKeys: [] },
 };
 
 const webhook = {
@@ -67,6 +70,8 @@ beforeEach(async () => {
       db,
       repository,
       sendText: new FakeSendTextMessageUseCase().asUseCase(),
+      sendTemplate: new FakeSendTemplateMessageUseCase().asUseCase(),
+      leads: new SqliteLeadRepository(db, silent),
       queue: new LeadSerialQueue(),
       audit: new SqliteAdminActionAudit(db, silent),
       logger: silent,

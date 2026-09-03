@@ -18,7 +18,9 @@ import { ReplyStrategy } from "./conversation-engine/domain/reply-strategy.ts";
 import { loadManagementEnv, resolveAdminConfig } from "./management/infrastructure/config/env.ts";
 import { ConversationIndexProjection } from "./management/infrastructure/persistence/conversation-index-projection.ts";
 import { IndexingConversationRepository } from "./management/infrastructure/persistence/indexing-conversation-repository.ts";
+import { ProspectingReplyTracker } from "./management/infrastructure/persistence/prospecting-reply-tracker.ts";
 import { SqliteAdminActionAudit } from "./management/infrastructure/persistence/sqlite-admin-action-audit.ts";
+import { SqliteLeadRepository } from "./management/infrastructure/persistence/sqlite-lead-repository.ts";
 import { openDatabase } from "./shared/persistence/sqlite/open-database.ts";
 import { HandleInboundMessageUseCase } from "./whatsapp-connectivity/application/use-cases/handle-inbound-message.use-case.ts";
 import { HandleMessageStatusUpdateUseCase } from "./whatsapp-connectivity/application/use-cases/handle-message-status-update.use-case.ts";
@@ -40,11 +42,11 @@ const gateway = new MetaCloudApiGateway({
   phoneNumberId: env.META_PHONE_NUMBER_ID,
 });
 
-// Exportado para uso manual (ex.: validação de QA do envio do template `hello_world`),
-// já que esta change ainda não expõe um gatilho HTTP para envio outbound.
+// Envio de template — usado pelo gatilho HTTP de prospecção (`POST /admin/api/leads/
+// :leadPhone/prospect`) quando `/admin` está ligado; segue exportado para uso manual em QA.
 export const sendOutboundMessage = new SendOutboundMessageUseCase(gateway);
-// Exportado para uso manual (ex.: validação de QA do envio de texto livre dentro da
-// janela de 24h), já que esta change ainda não expõe um gatilho HTTP para envio outbound.
+// Envio de texto de sessão — usado pelas ações de operação do painel e pelo motor
+// de conversas; segue exportado para uso manual em QA.
 export const sendTextMessage = new SendTextMessageUseCase(gateway);
 
 // --- Motor de conversas (conversation-engine) ---
@@ -127,14 +129,23 @@ const managementEnv = loadManagementEnv();
 const adminConfig = resolveAdminConfig(managementEnv);
 
 let conversationIndexProjection: ConversationIndexProjection | undefined;
+let leadRepository: SqliteLeadRepository | undefined;
 let conversationRepository: ConversationRepositoryPort = new FileConversationRepository(
   conversationEnv.CONVERSATIONS_DIR,
 );
 if (adminConfig) {
   conversationIndexProjection = new ConversationIndexProjection(database);
-  conversationRepository = new IndexingConversationRepository(
-    conversationRepository,
-    conversationIndexProjection,
+  leadRepository = new SqliteLeadRepository(database, logger);
+  // Cadeia de decorators: o `IndexingConversationRepository` mantém a projeção de
+  // leitura a cada `save()`; o `ProspectingReplyTracker` roda por fora dele e liga
+  // o primeiro inbound de um lead prospectado ao estado `replied` (best-effort).
+  conversationRepository = new ProspectingReplyTracker(
+    new IndexingConversationRepository(
+      conversationRepository,
+      conversationIndexProjection,
+      logger,
+    ),
+    leadRepository,
     logger,
   );
 }
@@ -203,6 +214,8 @@ export const app = buildFastifyServer({
         db: database,
         repository: conversationRepository,
         sendText: sendTextMessage,
+        sendTemplate: sendOutboundMessage,
+        leads: leadRepository!,
         queue: leadSerialQueue,
         audit: new SqliteAdminActionAudit(database, logger),
         logger,

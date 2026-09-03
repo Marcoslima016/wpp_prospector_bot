@@ -16,8 +16,16 @@ export const CONVERSATION_STATES = ["active", "ended", "awaitingHuman"] as const
 /** Origem de um turno outbound: gerado pelo bot ou escrito por um operador. */
 export const OUTBOUND_TURN_ORIGINS = ["bot", "operator"] as const;
 
+/** Natureza de um turno outbound de operador: mensagem avulsa ou primeiro contato de prospecção. */
+export const OUTBOUND_TURN_KINDS = ["manual", "prospecting"] as const;
+
+/** Estado de prospecção de um lead. */
+export const PROSPECTING_STATES = ["pending", "sent", "replied", "failed"] as const;
+
 export const conversationStateSchema = z.enum(CONVERSATION_STATES);
 export const outboundTurnOriginSchema = z.enum(OUTBOUND_TURN_ORIGINS);
+export const outboundTurnKindSchema = z.enum(OUTBOUND_TURN_KINDS);
+export const prospectingStateSchema = z.enum(PROSPECTING_STATES);
 export const leadIntentSchema = z.enum(LEAD_INTENTS);
 export const leadQualificationSchema = z.enum(LEAD_QUALIFICATIONS);
 export const commercialPlanSchema = z.enum(COMMERCIAL_PLANS);

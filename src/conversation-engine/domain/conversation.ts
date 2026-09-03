@@ -236,6 +236,15 @@ export class Conversation {
     this._turns.push(ConversationTurn.manualOutbound({ text, timestamp: now }));
   }
 
+  /**
+   * Registra o turno outbound do primeiro contato de prospecção — um template
+   * aprovado disparado pelo operador. Origem `operator`, `kind: "prospecting"`.
+   * Não altera o estado do ciclo de vida nem a intenção/qualificação do lead.
+   */
+  recordProspectingOutboundTurn(text: string, now: Date = new Date()): void {
+    this._turns.push(ConversationTurn.prospectingOutbound({ text, timestamp: now }));
+  }
+
   recentTurns(limit: number): readonly ConversationTurn[] {
     if (limit <= 0) return [];
     return this._turns.slice(-limit);
