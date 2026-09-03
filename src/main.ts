@@ -24,6 +24,8 @@ import { SendOutboundMessageUseCase } from "./whatsapp-connectivity/application/
 import { SendTextMessageUseCase } from "./whatsapp-connectivity/application/use-cases/send-text-message.use-case.ts";
 import { loadEnv } from "./whatsapp-connectivity/infrastructure/config/env.ts";
 import { MetaCloudApiGateway } from "./whatsapp-connectivity/infrastructure/gateways/meta-cloud-api.gateway.ts";
+import { NoopMessagingCostRecorder } from "./whatsapp-connectivity/infrastructure/persistence/noop-messaging-cost-recorder.ts";
+import { SqliteMessagingCostRecorder } from "./whatsapp-connectivity/infrastructure/persistence/sqlite-messaging-cost-recorder.ts";
 import { buildFastifyServer } from "./whatsapp-connectivity/infrastructure/http/fastify-server.ts";
 import { ConsoleLogger } from "./whatsapp-connectivity/infrastructure/logging/console-logger.ts";
 
@@ -167,7 +169,17 @@ const pendingInboundSweeper = new PendingInboundSweeper({
 });
 
 const handleInboundMessage = new HandleInboundMessageUseCase(logger, inboundBatchCoordinator);
-const handleMessageStatusUpdate = new HandleMessageStatusUpdateUseCase(logger);
+
+// Registro append-only das janelas de conversa de 24 h faturáveis (fonte
+// WhatsApp da capability `consumption-metrics`). Best-effort; desligado por
+// config, usa o recorder no-op e o tratamento de status opera como sem a feature.
+const messagingCostRecorder = env.WHATSAPP_COST_TRACKING_ENABLED
+  ? new SqliteMessagingCostRecorder(database, logger, env.WHATSAPP_BILLING_COUNTRY)
+  : new NoopMessagingCostRecorder();
+const handleMessageStatusUpdate = new HandleMessageStatusUpdateUseCase(
+  logger,
+  messagingCostRecorder,
+);
 
 export const app = buildFastifyServer({
   webhook: {

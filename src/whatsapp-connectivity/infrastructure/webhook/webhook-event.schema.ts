@@ -14,12 +14,31 @@ const webhookStatusErrorSchema = z.object({
   message: z.string().optional(),
 });
 
+// A Meta cobra por janela de conversa de 24 h, não por mensagem. Esses dados de
+// precificação/conversa chegam em alguns eventos de status (tipicamente o
+// primeiro status faturável da janela). `category`/`pricing_model` ficam como
+// `string` (não `enum`) e `looseObject` preserva campos novos — um valor
+// desconhecido da Meta NÃO deve derrubar o parsing do evento inteiro.
+const webhookStatusPricingSchema = z.looseObject({
+  billable: z.boolean().optional(),
+  pricing_model: z.string().optional(),
+  category: z.string().optional(),
+});
+
+const webhookStatusConversationSchema = z.looseObject({
+  id: z.string().optional(),
+  origin: z.looseObject({ type: z.string().optional() }).optional(),
+  expiration_timestamp: z.string().optional(),
+});
+
 const webhookStatusSchema = z.object({
   id: z.string(),
   status: z.enum(["sent", "delivered", "read", "failed"]),
   timestamp: z.string(),
   recipient_id: z.string(),
   errors: z.array(webhookStatusErrorSchema).optional(),
+  pricing: webhookStatusPricingSchema.optional(),
+  conversation: webhookStatusConversationSchema.optional(),
 });
 
 const webhookChangeValueSchema = z.object({
