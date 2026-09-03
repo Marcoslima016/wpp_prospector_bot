@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { ConversationRepositoryPort } from "./conversation-engine/application/ports/conversation-repository.port.ts";
 import { GenerateReplyUseCase } from "./conversation-engine/application/use-cases/generate-reply.use-case.ts";
 import { loadConversationEngineEnv } from "./conversation-engine/infrastructure/config/env.ts";
 import { PendingInboundSweeper } from "./conversation-engine/infrastructure/boot/pending-inbound-sweeper.ts";
@@ -13,6 +14,9 @@ import { NoopUsageRecorder } from "./conversation-engine/infrastructure/persiste
 import { SqliteUsageRecorder } from "./conversation-engine/infrastructure/persistence/sqlite-usage-recorder.ts";
 import { ReplySenderAdapter } from "./conversation-engine/infrastructure/sending/reply-sender.adapter.ts";
 import { ReplyStrategy } from "./conversation-engine/domain/reply-strategy.ts";
+import { loadManagementEnv, resolveAdminConfig } from "./management/infrastructure/config/env.ts";
+import { ConversationIndexProjection } from "./management/infrastructure/persistence/conversation-index-projection.ts";
+import { IndexingConversationRepository } from "./management/infrastructure/persistence/indexing-conversation-repository.ts";
 import { openDatabase } from "./shared/persistence/sqlite/open-database.ts";
 import { HandleInboundMessageUseCase } from "./whatsapp-connectivity/application/use-cases/handle-inbound-message.use-case.ts";
 import { HandleMessageStatusUpdateUseCase } from "./whatsapp-connectivity/application/use-cases/handle-message-status-update.use-case.ts";
@@ -111,7 +115,26 @@ const businessContextProvider = new LexicalRetrievalBusinessContext({
   logger,
 });
 
-const conversationRepository = new FileConversationRepository(conversationEnv.CONVERSATIONS_DIR);
+// API de gestão (/admin): quando ligada, o repositório de conversas é embrulhado
+// por um decorator que mantém a projeção de leitura (`conversation_index`) em
+// sincronia a cada `save()`. O motor recebe um `ConversationRepositoryPort` e não
+// sabe da projeção. Desligada, usa o `FileConversationRepository` puro.
+const managementEnv = loadManagementEnv();
+const adminConfig = resolveAdminConfig(managementEnv);
+
+let conversationIndexProjection: ConversationIndexProjection | undefined;
+let conversationRepository: ConversationRepositoryPort = new FileConversationRepository(
+  conversationEnv.CONVERSATIONS_DIR,
+);
+if (adminConfig) {
+  conversationIndexProjection = new ConversationIndexProjection(database);
+  conversationRepository = new IndexingConversationRepository(
+    conversationRepository,
+    conversationIndexProjection,
+    logger,
+  );
+}
+
 const replySender = new ReplySenderAdapter({ sendTextMessage, logger });
 
 // Conexão única do armazenamento SQL embutido. Consumida pelo `SqliteUsageRecorder`
@@ -147,20 +170,39 @@ const handleInboundMessage = new HandleInboundMessageUseCase(logger, inboundBatc
 const handleMessageStatusUpdate = new HandleMessageStatusUpdateUseCase(logger);
 
 export const app = buildFastifyServer({
-  handleInboundMessage,
-  handleMessageStatusUpdate,
-  logger,
-  webhookVerifyToken: env.META_WEBHOOK_VERIFY_TOKEN,
-  appSecret: env.META_APP_SECRET,
+  webhook: {
+    handleInboundMessage,
+    handleMessageStatusUpdate,
+    logger,
+    webhookVerifyToken: env.META_WEBHOOK_VERIFY_TOKEN,
+    appSecret: env.META_APP_SECRET,
+  },
+  admin: adminConfig
+    ? { config: adminConfig, db: database, repository: conversationRepository, logger }
+    : undefined,
 });
 
 const isMainModule = import.meta.url === `file://${process.argv[1]}`;
 
 if (isMainModule) {
-  pendingInboundSweeper
-    .run()
-    .catch((error: unknown) =>
+  const boot = async (): Promise<void> => {
+    if (conversationIndexProjection && conversationIndexProjection.isEmptyOrStale()) {
+      const indexed = await conversationIndexProjection.rebuildFromDir(
+        conversationEnv.CONVERSATIONS_DIR,
+      );
+      logger.info("Projeção de conversas (/admin) reconstruída no boot", { conversations: indexed });
+    }
+
+    await pendingInboundSweeper.run().catch((error: unknown) =>
       logger.error("Falha na varredura de mensagens inbound pendentes no boot", {
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    );
+  };
+
+  boot()
+    .catch((error: unknown) =>
+      logger.error("Falha na preparação do boot", {
         error: error instanceof Error ? error.message : String(error),
       }),
     )
