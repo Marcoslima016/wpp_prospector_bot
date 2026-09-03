@@ -13,7 +13,7 @@ describe("loadManagementEnv", () => {
     expect(env).toEqual({
       ADMIN_ENABLED: false,
       ADMIN_SESSION_TTL_MS: 43_200_000,
-      ADMIN_WEB_DIST_DIR: "../wpp_prospector_bot_web/dist",
+      ADMIN_WEB_DIST_DIR: "../wpp_prospector_bot_panel/dist",
     });
   });
 
@@ -28,7 +28,7 @@ describe("loadManagementEnv", () => {
     expect(env.ADMIN_ACCESS_SECRET).toBe("access-secret");
     expect(env.ADMIN_SESSION_SECRET).toBe("session-secret");
     expect(env.ADMIN_SESSION_TTL_MS).toBe(43_200_000);
-    expect(env.ADMIN_WEB_DIST_DIR).toBe("../wpp_prospector_bot_web/dist");
+    expect(env.ADMIN_WEB_DIST_DIR).toBe("../wpp_prospector_bot_panel/dist");
   });
 
   it("respeita os overrides de TTL e dir do build", () => {
@@ -69,7 +69,7 @@ describe("resolveAdminConfig", () => {
       accessSecret: "access-secret",
       sessionSecret: "session-secret",
       sessionTtlMs: 43_200_000,
-      webDistDir: "../wpp_prospector_bot_web/dist",
+      webDistDir: "../wpp_prospector_bot_panel/dist",
     });
   });
 });

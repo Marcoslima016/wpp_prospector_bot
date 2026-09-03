@@ -9,7 +9,7 @@ bundling.
 ## What Changes
 
 - **Monorepo com npm workspaces**: raiz ganha `workspaces`; nova app em
-  `applications/wpp_prospector_bot_web/`, espelhando `applications/wpp_prospector_bot_server/`.
+  `applications/wpp_prospector_bot_panel/`, espelhando `applications/wpp_prospector_bot_server/`.
 - **SPA React + Vite** (primeira toolchain de bundling do repo):
   - React + TypeScript, **TanStack Query** (dados, polling via `refetchInterval`) e
     **TanStack Router** ou **React Router 7** (decidir no design);
@@ -49,7 +49,7 @@ bundling.
 ## Impact
 
 - **Estrutura**: `package.json` raiz vira workspace; novo diretório
-  `applications/wpp_prospector_bot_web/` com seu próprio `package.json`, `vite.config.ts`,
+  `applications/wpp_prospector_bot_panel/` com seu próprio `package.json`, `vite.config.ts`,
   `tsconfig.json`, `index.html`, `src/`.
 - **Dependências novas** (no workspace do front): `react`, `react-dom`, `vite`,
   `@vitejs/plugin-react`, `@tanstack/react-query`, router, `tailwindcss`, libs do shadcn,

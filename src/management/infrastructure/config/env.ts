@@ -18,7 +18,7 @@ const envSchema = z
     ADMIN_SESSION_TTL_MS: z.coerce.number().int().positive().default(43_200_000),
     // Diretório do build da SPA de gestão, relativo ao diretório do processo.
     // Servido sob `/admin` só quando existir (a UI chega em outra change).
-    ADMIN_WEB_DIST_DIR: z.string().min(1).default("../wpp_prospector_bot_web/dist"),
+    ADMIN_WEB_DIST_DIR: z.string().min(1).default("../wpp_prospector_bot_panel/dist"),
   })
   .refine(
     (value) =>
