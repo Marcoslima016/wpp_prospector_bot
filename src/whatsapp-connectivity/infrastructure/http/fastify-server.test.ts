@@ -1,7 +1,10 @@
 import { createHmac } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { LeadSerialQueue } from "../../../conversation-engine/infrastructure/inbound/lead-serial-queue.ts";
 import type { ResolvedAdminConfig } from "../../../management/infrastructure/config/env.ts";
+import { SqliteAdminActionAudit } from "../../../management/infrastructure/persistence/sqlite-admin-action-audit.ts";
+import { FakeSendTextMessageUseCase } from "../../../management/test-support/fake-send-text-message.ts";
 import { InMemoryConversationRepository } from "../../../management/test-support/in-memory-conversation-repository.ts";
 import { openDatabase } from "../../../shared/persistence/sqlite/open-database.ts";
 import type { HandleInboundMessageUseCase } from "../../application/use-cases/handle-inbound-message.use-case.ts";
@@ -36,7 +39,15 @@ function adminDeps() {
     sessionTtlMs: 1000,
     webDistDir: "./__no_dist__",
   };
-  return { config, db, repository: new InMemoryConversationRepository(), logger: webhookDeps.logger };
+  return {
+    config,
+    db,
+    repository: new InMemoryConversationRepository(),
+    sendText: new FakeSendTextMessageUseCase().asUseCase(),
+    queue: new LeadSerialQueue(),
+    audit: new SqliteAdminActionAudit(db, webhookDeps.logger),
+    logger: webhookDeps.logger,
+  };
 }
 
 function signature(body: string): string {

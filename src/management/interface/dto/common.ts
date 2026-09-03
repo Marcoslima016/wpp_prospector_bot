@@ -13,7 +13,11 @@ export const MANAGEMENT_CONTRACT_VERSION = "2026-09-02";
 /** Estados do ciclo de vida da conversa expostos como filtro e na listagem. */
 export const CONVERSATION_STATES = ["active", "ended", "awaitingHuman"] as const;
 
+/** Origem de um turno outbound: gerado pelo bot ou escrito por um operador. */
+export const OUTBOUND_TURN_ORIGINS = ["bot", "operator"] as const;
+
 export const conversationStateSchema = z.enum(CONVERSATION_STATES);
+export const outboundTurnOriginSchema = z.enum(OUTBOUND_TURN_ORIGINS);
 export const leadIntentSchema = z.enum(LEAD_INTENTS);
 export const leadQualificationSchema = z.enum(LEAD_QUALIFICATIONS);
 export const commercialPlanSchema = z.enum(COMMERCIAL_PLANS);

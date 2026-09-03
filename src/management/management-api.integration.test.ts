@@ -6,9 +6,12 @@ import { buildFastifyServer } from "../whatsapp-connectivity/infrastructure/http
 import { openDatabase } from "../shared/persistence/sqlite/open-database.ts";
 import type { Logger } from "./application/ports/logger.port.ts";
 import type { ResolvedAdminConfig } from "./infrastructure/config/env.ts";
+import { LeadSerialQueue } from "../conversation-engine/infrastructure/inbound/lead-serial-queue.ts";
 import { ConversationIndexProjection } from "./infrastructure/persistence/conversation-index-projection.ts";
 import { IndexingConversationRepository } from "./infrastructure/persistence/indexing-conversation-repository.ts";
+import { SqliteAdminActionAudit } from "./infrastructure/persistence/sqlite-admin-action-audit.ts";
 import { buildConversation } from "./test-support/conversation-fixtures.ts";
+import { FakeSendTextMessageUseCase } from "./test-support/fake-send-text-message.ts";
 import { InMemoryConversationRepository } from "./test-support/in-memory-conversation-repository.ts";
 
 const ACCESS_SECRET = "integration-access-secret";
@@ -57,7 +60,18 @@ beforeEach(async () => {
     }),
   );
 
-  app = buildFastifyServer({ webhook, admin: { config, db, repository, logger: silent } });
+  app = buildFastifyServer({
+    webhook,
+    admin: {
+      config,
+      db,
+      repository,
+      sendText: new FakeSendTextMessageUseCase().asUseCase(),
+      queue: new LeadSerialQueue(),
+      audit: new SqliteAdminActionAudit(db, silent),
+      logger: silent,
+    },
+  });
   await app.ready();
 });
 

@@ -186,6 +186,7 @@ export class Conversation {
           recommendedModules,
           interestedModules,
           quotedPlan: decision.quotedPlan,
+          origin: "bot",
         }),
       );
     }
@@ -206,6 +207,33 @@ export class Conversation {
     } else if (decision.endConversation) {
       this._state = "ended";
     }
+  }
+
+  /**
+   * Transição manual, iniciada por um operador: coloca a conversa em atendimento
+   * humano a partir de `active` ou `ended`. Não exige uma `BotDecision` e não
+   * toca na intenção nem na qualificação do lead. Idempotente se já em
+   * `awaitingHuman`.
+   */
+  handoffToHuman(): void {
+    this._state = "awaitingHuman";
+  }
+
+  /**
+   * Transição manual, iniciada por um operador: devolve a conversa para `active`
+   * a partir de `awaitingHuman` ou de `ended` (reabrindo-a), fazendo o bot voltar
+   * a responder. Idempotente se já em `active`.
+   */
+  resumeFromHuman(): void {
+    this._state = "active";
+  }
+
+  /**
+   * Registra um turno outbound escrito à mão por um operador (mensagem avulsa
+   * pelo painel). Não altera o estado do ciclo de vida nem a intenção/qualificação.
+   */
+  recordManualOutboundTurn(text: string, now: Date = new Date()): void {
+    this._turns.push(ConversationTurn.manualOutbound({ text, timestamp: now }));
   }
 
   recentTurns(limit: number): readonly ConversationTurn[] {

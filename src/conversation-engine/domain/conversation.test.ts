@@ -185,6 +185,91 @@ describe("Conversation", () => {
     expect(outbound.quotedPlan).toBe("personalizado");
   });
 
+  describe("transições manuais iniciadas por um operador", () => {
+    it("handoffToHuman coloca uma conversa ativa em atendimento humano", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      expect(conversation.state).toBe("active");
+
+      conversation.handoffToHuman();
+
+      expect(conversation.state).toBe("awaitingHuman");
+      expect(conversation.acceptsAutomatedReplies).toBe(false);
+    });
+
+    it("handoffToHuman também vale a partir de `ended`", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.recordInboundTurn({ text: "tchau", timestamp: t0, messageId: "wamid.1" });
+      conversation.applyDecision(decision({ endConversation: true, replyMessages: ["Até!"] }), t0);
+      expect(conversation.state).toBe("ended");
+
+      conversation.handoffToHuman();
+
+      expect(conversation.state).toBe("awaitingHuman");
+    });
+
+    it("handoffToHuman é idempotente quando já está aguardando humano", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.handoffToHuman();
+      conversation.handoffToHuman();
+
+      expect(conversation.state).toBe("awaitingHuman");
+    });
+
+    it("resumeFromHuman devolve uma conversa em atendimento humano para `active`", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.handoffToHuman();
+
+      conversation.resumeFromHuman();
+
+      expect(conversation.state).toBe("active");
+      expect(conversation.acceptsAutomatedReplies).toBe(true);
+    });
+
+    it("resumeFromHuman reabre uma conversa encerrada", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.recordInboundTurn({ text: "tchau", timestamp: t0, messageId: "wamid.1" });
+      conversation.applyDecision(decision({ endConversation: true, replyMessages: ["Até!"] }), t0);
+      expect(conversation.state).toBe("ended");
+
+      conversation.resumeFromHuman();
+
+      expect(conversation.state).toBe("active");
+    });
+
+    it("resumeFromHuman é idempotente quando já está `active`", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.resumeFromHuman();
+
+      expect(conversation.state).toBe("active");
+    });
+
+    it("recordManualOutboundTurn adiciona um turno de origem `operator` sem mudar estado nem status do lead", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.recordInboundTurn({ text: "oi", timestamp: t0, messageId: "wamid.1" });
+      conversation.applyDecision(decision({ replyMessages: ["Olá!"], leadIntent: "interested" }), t0);
+
+      conversation.handoffToHuman();
+      conversation.recordManualOutboundTurn("Oi, aqui é o time comercial.", t0);
+
+      const outbound = conversation.turns.filter((turn) => turn.direction === "outbound");
+      expect(outbound.map((turn) => turn.origin)).toEqual(["bot", "operator"]);
+      expect(outbound.at(-1)!.text).toBe("Oi, aqui é o time comercial.");
+      expect(conversation.state).toBe("awaitingHuman");
+      expect(conversation.leadIntent).toBe("interested");
+    });
+
+    it("round-trip preserva a origem dos turnos outbound", () => {
+      const conversation = Conversation.createNew("+5511999999999");
+      conversation.applyDecision(decision({ replyMessages: ["Olá!"] }), t0);
+      conversation.recordManualOutboundTurn("mensagem manual", t0);
+
+      const restored = Conversation.fromJSON(JSON.parse(JSON.stringify(conversation.toJSON())));
+
+      const outbound = restored.turns.filter((turn) => turn.direction === "outbound");
+      expect(outbound.map((turn) => turn.origin)).toEqual(["bot", "operator"]);
+    });
+  });
+
   it("carrega uma conversa salva antes desta mudança (sem os campos novos) sem erro", () => {
     const legacy = {
       leadPhone: "+5511999999999",

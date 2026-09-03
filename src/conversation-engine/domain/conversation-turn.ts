@@ -4,6 +4,12 @@ import type { CommercialPlan, ModuleId } from "./product-catalog.ts";
 
 export type TurnDirection = "inbound" | "outbound";
 
+/**
+ * Quem escreveu um turno outbound: o bot (decisão do LLM) ou um operador humano
+ * (mensagem avulsa pelo painel de gestão).
+ */
+export type OutboundTurnOrigin = "bot" | "operator";
+
 export interface InboundTurnProps {
   text: string;
   timestamp: Date;
@@ -19,6 +25,13 @@ export interface OutboundTurnProps {
   recommendedModules: ModuleId[];
   interestedModules: ModuleId[];
   quotedPlan: CommercialPlan | null;
+  /** Origem do turno. Ausente ⇒ `"bot"` (retrocompat). */
+  origin?: OutboundTurnOrigin;
+}
+
+export interface ManualOutboundTurnProps {
+  text: string;
+  timestamp: Date;
 }
 
 interface SerializedTurn {
@@ -34,6 +47,7 @@ interface SerializedTurn {
   recommendedModules?: ModuleId[];
   interestedModules?: ModuleId[];
   quotedPlan?: CommercialPlan | null;
+  origin?: OutboundTurnOrigin;
 }
 
 /**
@@ -54,6 +68,8 @@ export class ConversationTurn {
   readonly recommendedModules: readonly ModuleId[];
   readonly interestedModules: readonly ModuleId[];
   readonly quotedPlan: CommercialPlan | null;
+  /** Origem de um turno outbound (`"bot"` por padrão); `undefined` em turnos inbound. */
+  readonly origin?: OutboundTurnOrigin;
 
   private constructor(props: {
     direction: TurnDirection;
@@ -68,6 +84,7 @@ export class ConversationTurn {
     recommendedModules?: ModuleId[];
     interestedModules?: ModuleId[];
     quotedPlan?: CommercialPlan | null;
+    origin?: OutboundTurnOrigin;
   }) {
     this.direction = props.direction;
     this.text = props.text;
@@ -81,6 +98,7 @@ export class ConversationTurn {
     this.recommendedModules = props.recommendedModules ?? [];
     this.interestedModules = props.interestedModules ?? [];
     this.quotedPlan = props.quotedPlan ?? null;
+    this.origin = props.direction === "outbound" ? (props.origin ?? "bot") : undefined;
   }
 
   static inbound(props: InboundTurnProps): ConversationTurn {
@@ -104,6 +122,26 @@ export class ConversationTurn {
       recommendedModules: props.recommendedModules,
       interestedModules: props.interestedModules,
       quotedPlan: props.quotedPlan,
+      origin: props.origin ?? "bot",
+    });
+  }
+
+  /**
+   * Turno outbound escrito à mão por um operador (mensagem avulsa pelo painel).
+   * Sem metadados de decisão — não veio de uma `BotDecision`.
+   */
+  static manualOutbound(props: ManualOutboundTurnProps): ConversationTurn {
+    return new ConversationTurn({
+      direction: "outbound",
+      text: props.text,
+      timestamp: props.timestamp,
+      leadIntent: undefined,
+      leadQualification: null,
+      reasoning: null,
+      recommendedModules: [],
+      interestedModules: [],
+      quotedPlan: null,
+      origin: "operator",
     });
   }
 
@@ -142,6 +180,7 @@ export class ConversationTurn {
       serialized.recommendedModules = [...this.recommendedModules];
       serialized.interestedModules = [...this.interestedModules];
       serialized.quotedPlan = this.quotedPlan;
+      serialized.origin = this.origin ?? "bot";
     }
 
     return serialized;
@@ -162,6 +201,8 @@ export class ConversationTurn {
       recommendedModules: raw.recommendedModules ?? [],
       interestedModules: raw.interestedModules ?? [],
       quotedPlan: raw.quotedPlan ?? null,
+      // Retrocompat: turno outbound sem `origin` gravado é do bot.
+      origin: raw.origin ?? "bot",
     });
   }
 }

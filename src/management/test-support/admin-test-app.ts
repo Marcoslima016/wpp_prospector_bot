@@ -1,12 +1,15 @@
 import type { DatabaseSync } from "node:sqlite";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Conversation } from "../../conversation-engine/domain/conversation.ts";
+import { LeadSerialQueue } from "../../conversation-engine/infrastructure/inbound/lead-serial-queue.ts";
 import { openDatabase } from "../../shared/persistence/sqlite/open-database.ts";
 import type { Logger } from "../application/ports/logger.port.ts";
 import type { ResolvedAdminConfig } from "../infrastructure/config/env.ts";
 import { registerAdminRoutes } from "../infrastructure/http/register-admin-routes.ts";
 import { ConversationIndexProjection } from "../infrastructure/persistence/conversation-index-projection.ts";
 import { IndexingConversationRepository } from "../infrastructure/persistence/indexing-conversation-repository.ts";
+import { SqliteAdminActionAudit } from "../infrastructure/persistence/sqlite-admin-action-audit.ts";
+import { FakeSendTextMessageUseCase } from "./fake-send-text-message.ts";
 import { InMemoryConversationRepository } from "./in-memory-conversation-repository.ts";
 
 export const TEST_ACCESS_SECRET = "test-access-secret";
@@ -20,6 +23,8 @@ export interface AdminTestApp {
   db: DatabaseSync;
   inner: InMemoryConversationRepository;
   repository: IndexingConversationRepository;
+  /** Fake do envio de texto de sessão — inspecione `.calls` ou force falha com `.failWith`. */
+  sendText: FakeSendTextMessageUseCase;
   now: { value: Date };
   /** Faz login e devolve o header `cookie` da sessão. */
   login: () => Promise<string>;
@@ -42,6 +47,9 @@ export async function buildAdminTestApp(
   const inner = new InMemoryConversationRepository();
   const projection = new ConversationIndexProjection(db, () => now.value);
   const repository = new IndexingConversationRepository(inner, projection, silentLogger);
+  const sendText = new FakeSendTextMessageUseCase();
+  const queue = new LeadSerialQueue();
+  const audit = new SqliteAdminActionAudit(db, silentLogger, () => now.value);
 
   for (const conversation of options.conversations ?? []) {
     await repository.save(conversation);
@@ -60,6 +68,9 @@ export async function buildAdminTestApp(
     config,
     db,
     repository,
+    sendText: sendText.asUseCase(),
+    queue,
+    audit,
     logger: silentLogger,
     clock: () => now.value,
   });
@@ -81,6 +92,7 @@ export async function buildAdminTestApp(
     db,
     inner,
     repository,
+    sendText,
     now,
     login,
     close: async () => {

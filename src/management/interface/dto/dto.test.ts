@@ -3,6 +3,11 @@ import {
   ContractViolationError,
   checkContract,
 } from "../../infrastructure/http/reply-with-contract.ts";
+import {
+  handoffResultSchema,
+  resumeResultSchema,
+  sendMessageResultSchema,
+} from "./conversation-actions.dto.ts";
 import { conversationDetailSchema, conversationListPageSchema } from "./conversation.dto.ts";
 import { consumptionSeriesSchema } from "./consumption.dto.ts";
 import { EMPTY_OVERVIEW, overviewSchema } from "./overview.dto.ts";
@@ -70,6 +75,7 @@ describe("DTOs de gestão", () => {
           direction: "outbound",
           text: "olá!",
           timestamp: "2026-09-02T12:00:00.000Z",
+          origin: "bot",
           leadIntent: "needs_more_info",
           leadQualification: null,
           reasoning: "x",
@@ -80,6 +86,78 @@ describe("DTOs de gestão", () => {
       ],
     };
     expect(conversationDetailSchema.safeParse(detail).success).toBe(true);
+  });
+
+  it("conversationDetailSchema rejeita um turno outbound sem `origin`", () => {
+    const detail = {
+      leadPhone: "5511988887777",
+      state: "active",
+      leadIntent: "unknown",
+      leadQualification: null,
+      recommendedModules: [],
+      interestedModules: [],
+      quotedPlan: null,
+      hasPendingInbound: false,
+      hasAbandonedInbound: false,
+      turnCount: 1,
+      lastActivityAt: "2026-09-02T12:00:00.000Z",
+      turns: [
+        { direction: "outbound", text: "olá!", timestamp: "2026-09-02T12:00:00.000Z" },
+      ],
+    };
+    expect(conversationDetailSchema.safeParse(detail).success).toBe(false);
+  });
+
+  it("handoffResult/resumeResult reusam o contrato de detalhe da conversa", () => {
+    const detail = {
+      leadPhone: "5511988887777",
+      state: "awaitingHuman",
+      leadIntent: "unknown",
+      leadQualification: null,
+      recommendedModules: [],
+      interestedModules: [],
+      quotedPlan: null,
+      hasPendingInbound: false,
+      hasAbandonedInbound: false,
+      turnCount: 1,
+      lastActivityAt: "2026-09-02T12:00:00.000Z",
+      turns: [
+        {
+          direction: "outbound",
+          text: "olá!",
+          timestamp: "2026-09-02T12:00:00.000Z",
+          origin: "operator",
+        },
+      ],
+    };
+    expect(handoffResultSchema.safeParse(detail).success).toBe(true);
+    expect(resumeResultSchema.safeParse({ ...detail, state: "active" }).success).toBe(true);
+  });
+
+  it("sendMessageResultSchema aceita a confirmação com o turno do operador", () => {
+    const result = {
+      sent: true,
+      turn: {
+        direction: "outbound",
+        text: "mensagem do operador",
+        timestamp: "2026-09-02T12:00:00.000Z",
+        origin: "operator",
+      },
+    };
+    expect(sendMessageResultSchema.safeParse(result).success).toBe(true);
+  });
+
+  it("sendMessageResultSchema rejeita `origin` fora do enum", () => {
+    const result = {
+      sent: true,
+      turn: {
+        direction: "outbound",
+        text: "x",
+        timestamp: "2026-09-02T12:00:00.000Z",
+        origin: "robot",
+      },
+    };
+    expect(sendMessageResultSchema.safeParse(result).success).toBe(false);
   });
 
   it("consumptionSeriesSchema aceita uma série vazia", () => {

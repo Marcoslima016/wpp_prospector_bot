@@ -6,6 +6,7 @@ import type { ConversationRepositoryPort } from "../../application/ports/convers
 import type { Logger } from "../../application/ports/logger.port.ts";
 import { Conversation } from "../../domain/conversation.ts";
 import { toE164LeadPhone } from "../../domain/lead-phone.ts";
+import { LeadSerialQueue } from "./lead-serial-queue.ts";
 
 export interface GenerateReplyPort {
   execute(leadPhone: string, messageIds: string[]): Promise<void>;
@@ -17,6 +18,12 @@ export interface InboundBatchCoordinatorDeps {
   logger: Logger;
   /** Janela fixa de coalescing, a partir da primeira mensagem ainda não processada. */
   batchWindowMs: number;
+  /**
+   * Fila serial por lead. Compartilhada com as ações de operação do painel para
+   * que uma ação não colida com uma geração de resposta em andamento. Opcional:
+   * quando ausente, o coordenador usa uma fila própria.
+   */
+  queue?: LeadSerialQueue;
 }
 
 /**
@@ -29,8 +36,8 @@ export class InboundBatchCoordinator implements InboundMessagePort {
   private readonly generateReply: GenerateReplyPort;
   private readonly logger: Logger;
   private readonly batchWindowMs: number;
+  private readonly queue: LeadSerialQueue;
 
-  private readonly queues = new Map<string, Promise<void>>();
   private readonly buffers = new Map<string, string[]>();
   private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
 
@@ -39,6 +46,7 @@ export class InboundBatchCoordinator implements InboundMessagePort {
     this.generateReply = deps.generateReply;
     this.logger = deps.logger;
     this.batchWindowMs = deps.batchWindowMs;
+    this.queue = deps.queue ?? new LeadSerialQueue();
   }
 
   receive(message: InboundMessageDto): void {
@@ -84,7 +92,7 @@ export class InboundBatchCoordinator implements InboundMessagePort {
 
   /** Aguarda o esvaziamento da fila serial de todos os leads (auxiliar de teste/shutdown). */
   async whenSettled(): Promise<void> {
-    await Promise.all([...this.queues.values()]);
+    await this.queue.whenSettled();
   }
 
   private bufferAndSchedule(leadPhone: string, messageId: string): void {
@@ -109,20 +117,11 @@ export class InboundBatchCoordinator implements InboundMessagePort {
   }
 
   private enqueue(leadPhone: string, task: () => Promise<void>): void {
-    const previous = this.queues.get(leadPhone) ?? Promise.resolve();
-    const next = previous
-      .then(task)
-      .catch((error: unknown) => {
-        this.logger.error("Falha ao processar inbound do lead na fila serial", {
-          leadPhone,
-          error: error instanceof Error ? error.message : String(error),
-        });
-      })
-      .finally(() => {
-        if (this.queues.get(leadPhone) === next) {
-          this.queues.delete(leadPhone);
-        }
+    void this.queue.run(leadPhone, task).catch((error: unknown) => {
+      this.logger.error("Falha ao processar inbound do lead na fila serial", {
+        leadPhone,
+        error: error instanceof Error ? error.message : String(error),
       });
-    this.queues.set(leadPhone, next);
+    });
   }
 }

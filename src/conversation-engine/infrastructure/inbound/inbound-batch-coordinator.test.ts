@@ -5,6 +5,7 @@ import type { Logger } from "../../application/ports/logger.port.ts";
 import { BotDecision } from "../../domain/bot-decision.ts";
 import { Conversation } from "../../domain/conversation.ts";
 import { InboundBatchCoordinator, type GenerateReplyPort } from "./inbound-batch-coordinator.ts";
+import { LeadSerialQueue } from "./lead-serial-queue.ts";
 
 const WINDOW = 8000;
 const PHONE = "+5511999999999";
@@ -62,6 +63,7 @@ beforeEach(() => {
     generateReply,
     logger,
     batchWindowMs: WINDOW,
+    queue: new LeadSerialQueue(),
   });
 });
 

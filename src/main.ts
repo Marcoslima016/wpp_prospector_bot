@@ -6,6 +6,7 @@ import { GenerateReplyUseCase } from "./conversation-engine/application/use-case
 import { loadConversationEngineEnv } from "./conversation-engine/infrastructure/config/env.ts";
 import { PendingInboundSweeper } from "./conversation-engine/infrastructure/boot/pending-inbound-sweeper.ts";
 import { InboundBatchCoordinator } from "./conversation-engine/infrastructure/inbound/inbound-batch-coordinator.ts";
+import { LeadSerialQueue } from "./conversation-engine/infrastructure/inbound/lead-serial-queue.ts";
 import { loadKnowledge } from "./conversation-engine/infrastructure/knowledge/knowledge-loader.ts";
 import { LexicalRetrievalBusinessContext } from "./conversation-engine/infrastructure/knowledge/lexical-retrieval.business-context.ts";
 import { AnthropicLlmClient } from "./conversation-engine/infrastructure/llm/anthropic-llm-client.ts";
@@ -17,6 +18,7 @@ import { ReplyStrategy } from "./conversation-engine/domain/reply-strategy.ts";
 import { loadManagementEnv, resolveAdminConfig } from "./management/infrastructure/config/env.ts";
 import { ConversationIndexProjection } from "./management/infrastructure/persistence/conversation-index-projection.ts";
 import { IndexingConversationRepository } from "./management/infrastructure/persistence/indexing-conversation-repository.ts";
+import { SqliteAdminActionAudit } from "./management/infrastructure/persistence/sqlite-admin-action-audit.ts";
 import { openDatabase } from "./shared/persistence/sqlite/open-database.ts";
 import { HandleInboundMessageUseCase } from "./whatsapp-connectivity/application/use-cases/handle-inbound-message.use-case.ts";
 import { HandleMessageStatusUpdateUseCase } from "./whatsapp-connectivity/application/use-cases/handle-message-status-update.use-case.ts";
@@ -154,11 +156,17 @@ const generateReply = new GenerateReplyUseCase({
   logger,
 });
 
+// Fila serial por lead, compartilhada entre o processamento de mensagens
+// recebidas e as ações de operação do painel (/admin) — uma ação nunca colide
+// com uma geração de resposta em andamento para o mesmo lead.
+const leadSerialQueue = new LeadSerialQueue();
+
 const inboundBatchCoordinator = new InboundBatchCoordinator({
   repository: conversationRepository,
   generateReply,
   logger,
   batchWindowMs: conversationEnv.CONVERSATION_BATCH_WINDOW_MS,
+  queue: leadSerialQueue,
 });
 
 const pendingInboundSweeper = new PendingInboundSweeper({
@@ -190,7 +198,15 @@ export const app = buildFastifyServer({
     appSecret: env.META_APP_SECRET,
   },
   admin: adminConfig
-    ? { config: adminConfig, db: database, repository: conversationRepository, logger }
+    ? {
+        config: adminConfig,
+        db: database,
+        repository: conversationRepository,
+        sendText: sendTextMessage,
+        queue: leadSerialQueue,
+        audit: new SqliteAdminActionAudit(database, logger),
+        logger,
+      }
     : undefined,
 });
 

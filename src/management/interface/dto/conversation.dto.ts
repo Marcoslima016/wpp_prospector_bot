@@ -6,6 +6,7 @@ import {
   leadIntentSchema,
   leadQualificationSchema,
   moduleIdSchema,
+  outboundTurnOriginSchema,
 } from "./common.ts";
 
 /** Item da listagem paginada — projeção de leitura, sem o histórico de turnos. */
@@ -32,14 +33,25 @@ export const conversationListPageSchema = z.object({
 
 export type ConversationListPage = z.infer<typeof conversationListPageSchema>;
 
-/** Um turno serializado no detalhe da conversa. */
-export const conversationDetailTurnSchema = z.object({
-  direction: z.enum(["inbound", "outbound"]),
+/** Turno inbound no detalhe da conversa. */
+export const conversationDetailInboundTurnSchema = z.object({
+  direction: z.literal("inbound"),
   text: z.string(),
   timestamp: isoDateStringSchema,
   messageId: z.string().optional(),
   pendingDecision: z.boolean().optional(),
   abandoned: z.boolean().optional(),
+});
+
+/**
+ * Turno outbound no detalhe da conversa. `origin` é obrigatório — o mapper
+ * sempre o preenche (default `"bot"` para turnos gravados antes desta mudança).
+ */
+export const conversationDetailOutboundTurnSchema = z.object({
+  direction: z.literal("outbound"),
+  text: z.string(),
+  timestamp: isoDateStringSchema,
+  origin: outboundTurnOriginSchema,
   leadIntent: leadIntentSchema.optional(),
   leadQualification: leadQualificationSchema.nullable().optional(),
   reasoning: z.string().nullable().optional(),
@@ -47,6 +59,14 @@ export const conversationDetailTurnSchema = z.object({
   interestedModules: z.array(moduleIdSchema).optional(),
   quotedPlan: commercialPlanSchema.nullable().optional(),
 });
+
+/** Um turno serializado no detalhe da conversa. */
+export const conversationDetailTurnSchema = z.discriminatedUnion("direction", [
+  conversationDetailInboundTurnSchema,
+  conversationDetailOutboundTurnSchema,
+]);
+
+export type ConversationDetailOutboundTurn = z.infer<typeof conversationDetailOutboundTurnSchema>;
 
 /** Detalhe completo, lido da fonte da verdade (arquivo do lead). */
 export const conversationDetailSchema = z.object({
