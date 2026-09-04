@@ -123,14 +123,31 @@ tier: geral
 kind: discovery
 title: Formato da ficha estruturada de um módulo
 
-Quando o lead pedir os detalhes de um módulo específico, responder com:
-- Nome do módulo
-- O que é: descrição curta
-- Para quem é: perfil de empresa ou usuário
-- Resolve principalmente: principais dores
-- Funcionalidades: as funções mais relevantes
-- Pode funcionar separado? Sim / explicar eventual dependência
-- Pode integrar com: módulos relacionados
+Quando o lead pedir os detalhes de um módulo específico, responder no modo
+estruturado (ver "Formato das respostas" no prompt), seguindo este molde:
+
+```
+*<emoji> <Nome do módulo>*
+
+_O que é:_ <descrição curta>
+
+_Para quem é:_ <perfil de empresa ou usuário>
+
+_Resolve principalmente:_ <principais dores>
+
+*Funcionalidades:*
+▪ <funcionalidade mais relevante>
+▪ <funcionalidade mais relevante>
+▪ <funcionalidade mais relevante>
+
+✅ <"Funciona separado, sem depender de outros módulos." ou a dependência,
+   se houver>
+🔗 Integra com: <módulos relacionados>
+```
+
+Escolha um emoji que represente o módulo (ex.: 📦 para gestão de obras, 🧱
+para acompanhamento de obra). Liste só as funcionalidades mais relevantes
+para a dor do lead, não a lista inteira do trecho de funcionalidades.
 
 ====
 id: discovery-perguntas
@@ -192,11 +209,18 @@ Núcleo operacional para organizar a rotina dentro das obras e registrar o
 trabalho de campo de forma estruturada. Transforma o planejamento em atividades
 acompanhadas diariamente pela administração e pela equipe.
 
-Funcionalidades: cadastro de obras e vínculo de equipes; organização do dia de
-trabalho; acompanhamento de atividades e tarefas; frentes de serviço; registros
-por data e observações operacionais; consulta de dias anteriores e planejamento
-de dias futuros; acompanhamento de pavimentos; registro de pendências; uso por
-administrador, encarregado e colaborador. Pensado para uso no celular, em campo.
+Funcionalidades:
+- cadastro de obras e vínculo de equipes
+- organização do dia de trabalho
+- acompanhamento de atividades e tarefas
+- frentes de serviço
+- registros por data e observações operacionais
+- consulta de dias anteriores e planejamento de dias futuros
+- acompanhamento de pavimentos
+- registro de pendências
+- uso por administrador, encarregado e colaborador
+
+Pensado para uso no celular, em campo.
 
 Pode ser vendido separadamente. Integra depois com gestão administrativa,
 colaboradores, financeiro, DRE, Universidade Empresarial e dashboards.
@@ -224,11 +248,15 @@ kind: funcionalidades
 title: Obra360 — o que é e funcionalidades
 
 Camada de acompanhamento que consolida a visão operacional da obra de forma
-rápida. Áreas: Dia (execução imediata), Pavimentos (evolução dos serviços por
-pavimento, útil em obras verticais), Planejamento (o que está previsto para os
-próximos períodos) e Pendências (o que impede a continuidade do trabalho:
-frente não liberada, serviço anterior pendente, correção, dependência de outra
-equipe, material pendente).
+rápida.
+
+Áreas:
+- Dia — execução imediata
+- Pavimentos — evolução dos serviços por pavimento, útil em obras verticais
+- Planejamento — o que está previsto para os próximos períodos
+- Pendências — o que impede a continuidade do trabalho: frente não liberada,
+  serviço anterior pendente, correção, dependência de outra equipe, material
+  pendente
 
 Funciona melhor conectado aos dados de Gestão de Obras.
 
@@ -255,10 +283,15 @@ kind: funcionalidades
 title: Gestão de Equipes e Presença — o que é e funcionalidades
 
 Organiza os colaboradores das obras e o acompanhamento de presença e atuação em
-campo. Funcionalidades: cadastro de colaboradores e vínculo às obras; associação
-a tarefas e frentes; registro diário de presença e de faltas; histórico de
-registros; identificação de quem estava disponível em determinado dia; perfis de
-acesso (administrador, encarregado, colaborador).
+campo.
+
+Funcionalidades:
+- cadastro de colaboradores e vínculo às obras
+- associação a tarefas e frentes
+- registro diário de presença e de faltas
+- histórico de registros
+- identificação de quem estava disponível em determinado dia
+- perfis de acesso (administrador, encarregado, colaborador)
 
 Pode ser vendido separadamente, como solução inicial para quem precisa organizar
 equipes e presença antes de implantar funcionalidades mais amplas.
@@ -285,12 +318,18 @@ kind: funcionalidades
 title: Planejamento e Frentes de Serviço — o que é e funcionalidades
 
 Organiza onde cada equipe trabalha, qual atividade executa e como os serviços
-avançam ao longo da obra. Funcionalidades: criação e controle de frentes;
-definição de atividade, colaboradores e local ou pavimento; continuidade de
-frentes (uma frente permanece ativa por vários dias, sem recriar todo dia);
-planejamento diário, semanal e futuro; acompanhamento da progressão do serviço,
-inclusive pavimento a pavimento em obras verticais; observações e pendências por
-frente; histórico de execução.
+avançam ao longo da obra.
+
+Funcionalidades:
+- criação e controle de frentes
+- definição de atividade, colaboradores e local ou pavimento
+- continuidade de frentes (uma frente permanece ativa por vários dias, sem
+  recriar todo dia)
+- planejamento diário, semanal e futuro
+- acompanhamento da progressão do serviço, inclusive pavimento a pavimento em
+  obras verticais
+- observações e pendências por frente
+- histórico de execução
 
 Pode ser vendido separadamente, indicado para quem já tem controles
 administrativos mas tem dificuldade no planejamento da produção em campo.
@@ -317,11 +356,17 @@ kind: funcionalidades
 title: Checklists e Controle Operacional — o que é e funcionalidades
 
 Padroniza verificações recorrentes da empresa para que atividades importantes não
-dependam só da memória dos responsáveis. Funcionalidades: criação e administração
-de checklists e seus itens; uso em rotinas operacionais; acompanhamento de
-verificações; associação a atividades ou ao contexto da obra; histórico de
-registros. Exemplos: início de atividade, conferência de preparação, fechamento
-do dia, validação de etapas, rotinas e verificações administrativas.
+dependam só da memória dos responsáveis.
+
+Funcionalidades:
+- criação e administração de checklists e seus itens
+- uso em rotinas operacionais
+- acompanhamento de verificações
+- associação a atividades ou ao contexto da obra
+- histórico de registros
+
+Exemplos: início de atividade, conferência de preparação, fechamento do dia,
+validação de etapas, rotinas e verificações administrativas.
 
 Pode ser vendido separadamente, para quem quer começar pela padronização de
 processos.
@@ -348,10 +393,17 @@ kind: funcionalidades
 title: FluxoDRE Desktop / Gestão Administrativa — o que é e funcionalidades
 
 Camada administrativa do ecossistema, em ambiente desktop, para o escritório.
-Funcionalidades: cadastro de colaboradores; organização de documentos; registros
-administrativos; vales, pagamentos, recibos e obrigações; obras e centros de
-custo; informações financeiras e DRE; dashboards, relatórios e histórico; geração
-e organização de documentos administrativos, reduzindo digitação repetida.
+
+Funcionalidades:
+- cadastro de colaboradores
+- organização de documentos
+- registros administrativos
+- vales, pagamentos, recibos e obrigações
+- obras e centros de custo
+- informações financeiras e DRE
+- dashboards, relatórios e histórico
+- geração e organização de documentos administrativos, reduzindo digitação
+  repetida
 
 Indicado para operações com maior volume de informação, análise detalhada,
 organização documental e uso recorrente no escritório. Pode ser vendido
@@ -378,11 +430,16 @@ tier: base
 kind: funcionalidades
 title: Gestão de Colaboradores e Documentos — o que é e funcionalidades
 
-Centraliza dados dos colaboradores e documentos associados. Funcionalidades:
-cadastro e organização de dados cadastrais; associação com obras e com registros
-financeiros; documentos e anexos por colaborador; histórico; reaproveitamento dos
-mesmos dados em diferentes partes do sistema. O colaborador passa a ser uma
-entidade única, sem recadastro em cada controle.
+Centraliza dados dos colaboradores e documentos associados.
+
+Funcionalidades:
+- cadastro e organização de dados cadastrais
+- associação com obras e com registros financeiros
+- documentos e anexos por colaborador
+- histórico
+- reaproveitamento dos mesmos dados em diferentes partes do sistema
+
+O colaborador passa a ser uma entidade única, sem recadastro em cada controle.
 
 Pode ser vendido separadamente, como solução de organização administrativa e de
 pessoal.
@@ -408,9 +465,13 @@ kind: funcionalidades
 title: Vales, Pagamentos e Obrigações — o que é e funcionalidades
 
 Organiza obrigações financeiras ligadas aos colaboradores e à operação.
-Funcionalidades: registro de vales, pagamentos e recibos; obrigações previstas;
-associação de registros a colaboradores e a obra ou centro de custo; histórico
-financeiro; preparação dos dados para análise financeira.
+
+Funcionalidades:
+- registro de vales, pagamentos e recibos
+- obrigações previstas
+- associação de registros a colaboradores e a obra ou centro de custo
+- histórico financeiro
+- preparação dos dados para análise financeira
 
 Os registros servem depois de base para a conciliação financeira — comparar o que
 a empresa esperava pagar com o que efetivamente saiu da conta. Pode ser vendido
@@ -424,9 +485,15 @@ kind: funcionalidades
 title: DRE, Custos e Centros de Custo — o que é e funcionalidades
 
 Dá ao gestor uma visão organizada de receitas, despesas, custos e resultado.
-Funcionalidades: organização de receitas e despesas; estrutura de DRE; análise e
-classificação de custos; centros de custo; associação de gastos a obras;
-consolidação financeira; dashboards e indicadores.
+
+Funcionalidades:
+- organização de receitas e despesas
+- estrutura de DRE
+- análise e classificação de custos
+- centros de custo
+- associação de gastos a obras
+- consolidação financeira
+- dashboards e indicadores
 
 Centros de custo permitem relacionar cada gasto ao contexto em que ocorreu (obra,
 atividade, setor, categoria), evoluindo de uma visão financeira geral para uma
@@ -457,9 +524,14 @@ kind: funcionalidades
 title: Hub Obra na Mão — o que é e funcionalidades
 
 Porta de entrada do ecossistema: organiza o acesso aos módulos contratados
-conforme o perfil do usuário. Funcionalidades: acesso centralizado; organização
-dos módulos; identificação do usuário e perfil de acesso; direcionamento para as
-ferramentas contratadas; experiência integrada entre sistemas.
+conforme o perfil do usuário.
+
+Funcionalidades:
+- acesso centralizado
+- organização dos módulos
+- identificação do usuário e perfil de acesso
+- direcionamento para as ferramentas contratadas
+- experiência integrada entre sistemas
 
 Faz mais sentido quando a empresa usa mais de um módulo.
 
@@ -472,10 +544,16 @@ title: Artisys Finance (Financeiro Inteligente) — o que é e funcionalidades
 
 Camada de inteligência financeira sobre o FluxoDRE: confere movimentações e
 compara o extrato bancário com obrigações e registros existentes.
-Funcionalidades: leitura de documentos financeiros, extratos e PDFs bancários;
-identificação de movimentações; comparação com obrigações; conciliação
-financeira; sugestão de correspondências; detecção de divergências; análise de
-pagamentos; identificação de casos que exigem revisão humana.
+
+Funcionalidades:
+- leitura de documentos financeiros, extratos e PDFs bancários
+- identificação de movimentações
+- comparação com obrigações
+- conciliação financeira
+- sugestão de correspondências
+- detecção de divergências
+- análise de pagamentos
+- identificação de casos que exigem revisão humana
 
 Concilia inclusive quando um único pagamento representa várias obrigações
 (ex.: um PIX de R$ 4.000 = salário R$ 3.000 + vale R$ 1.000). Combina regras
@@ -507,10 +585,15 @@ title: Universidade Empresarial — o que é e funcionalidades
 
 Módulo de capacitação dos colaboradores, com conteúdo apresentado como
 capacitação profissional (sem rótulos que constranjam). Áreas: Capacitação em
-Comunicação, em Leitura e Matemática. Funcionalidades: sondagem inicial de nível;
-trilhas de aprendizado progressivas; exercícios e feedback em ciclos curtos
-(conteúdo → prática → feedback); materiais de apoio; experiência mobile/PWA,
-instalável no celular — importante para colaboradores que não usam computador.
+Comunicação, em Leitura e Matemática.
+
+Funcionalidades:
+- sondagem inicial de nível
+- trilhas de aprendizado progressivas
+- exercícios e feedback em ciclos curtos (conteúdo → prática → feedback)
+- materiais de apoio
+- experiência mobile/PWA, instalável no celular — importante para
+  colaboradores que não usam computador
 
 Pode ser vendida separadamente como solução de capacitação corporativa.
 Disponível no plano Personalizado.
@@ -536,12 +619,19 @@ tier: extra
 kind: funcionalidades
 title: Jogos e Gamificação Educacional — o que é e funcionalidades
 
-Camada de gamificação que reforça os conteúdos da Universidade Empresarial com
-atividades interativas: palavras cruzadas, jogos de palavras, dominó matemático,
-desafios de leitura, exercícios interativos. Os motores geram combinações
-variadas para reduzir repetição. Os jogos são vinculados aos conteúdos de
-capacitação, não são só entretenimento. Benefícios: mais engajamento, sessões
-curtas de aprendizado, experiência menos parecida com um curso tradicional.
+Camada de gamificação que reforça os conteúdos da Universidade Empresarial.
+Os motores geram combinações variadas para reduzir repetição. Os jogos são
+vinculados aos conteúdos de capacitação, não são só entretenimento.
+
+Funcionalidades:
+- palavras cruzadas
+- jogos de palavras
+- dominó matemático
+- desafios de leitura
+- exercícios interativos
+
+Benefícios: mais engajamento, sessões curtas de aprendizado, experiência menos
+parecida com um curso tradicional.
 
 Complemento da Universidade Empresarial. Disponível no plano Personalizado.
 
@@ -552,11 +642,18 @@ tier: extra
 kind: funcionalidades
 title: Assistente Inteligente — o que é e funcionalidades
 
-Camada de apoio ao uso do sistema: explica campos, orienta preenchimentos, indica
-onde está uma funcionalidade, explica processos e próximos passos, responde
-dúvidas de uso e ajuda a interpretar informações do sistema. Processos objetivos
-são tratados por regras do próprio sistema; a IA entra onde há necessidade de
-interpretação e orientação. Reduz a curva de aprendizado do usuário.
+Camada de apoio ao uso do sistema.
+
+Funcionalidades:
+- explica campos e orienta preenchimentos
+- indica onde está uma funcionalidade
+- explica processos e próximos passos
+- responde dúvidas de uso
+- ajuda a interpretar informações do sistema
+
+Processos objetivos são tratados por regras do próprio sistema; a IA entra onde
+há necessidade de interpretação e orientação. Reduz a curva de aprendizado do
+usuário.
 
 Disponível no plano Personalizado.
 
