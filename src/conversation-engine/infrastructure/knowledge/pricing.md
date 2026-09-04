@@ -10,8 +10,8 @@ O arquivo inteiro é injetado como bloco fixo; não usa metadados de trecho.
 
 | Plano | O que inclui | Valor |
 |---|---|---|
-| **Essencial** | Plano base: os módulos de operação de campo, gestão administrativa e DRE/custos, com funcionalidades reduzidas | **R$ 300/mês** |
-| **Personalizado** | Tudo do Essencial **+** todos os módulos do conjunto adicional (Artisys Finance, Universidade Empresarial, Jogos e Gamificação, Assistente Inteligente) | **R$ 500/mês** (Essencial + R$ 200/mês) |
+| **Essencial** | Plano base: os módulos de operação de campo, gestão administrativa e DRE/custos, com funcionalidades reduzidas | **R$ 200/mês** |
+| **Personalizado** | Tudo do Essencial **+** todos os módulos do conjunto adicional (Artisys Finance, Universidade Empresarial, Jogos e Gamificação, Assistente Inteligente) | **R$ 350/mês** (Essencial + R$ 150/mês) |
 
 O plano Personalizado é o plano completo: um único valor acima do Essencial que
 **libera todos os módulos do conjunto adicional de uma vez**. Não é seleção "à la
@@ -20,7 +20,7 @@ carte" — não existe contratação avulsa de um módulo do conjunto adicional.
 ## Como o bot usa isso
 
 - Quando o lead pergunta "quanto custa?": informar o valor mensal do Essencial
-  (R$ 300/mês) e mencionar o Personalizado (R$ 500/mês, ou seja, R$ 200/mês a
+  (R$ 200/mês) e mencionar o Personalizado (R$ 350/mês, ou seja, R$ 150/mês a
   mais) como o plano que libera todos os módulos do conjunto adicional.
 - Citar os planos e valores é permitido e esperado. Só isso — nada além da tabela
   acima.
