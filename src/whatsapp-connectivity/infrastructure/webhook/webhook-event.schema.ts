@@ -6,6 +6,7 @@ const webhookMessageSchema = z.object({
   timestamp: z.string(),
   type: z.string(),
   text: z.object({ body: z.string() }).optional(),
+  button: z.object({ text: z.string(), payload: z.string().optional() }).optional(),
 });
 
 const webhookStatusErrorSchema = z.object({

@@ -8,6 +8,7 @@ export interface RawInboundMessage {
   timestamp: string;
   type: string;
   text?: { body: string };
+  button?: { text: string; payload?: string };
 }
 
 export class HandleInboundMessageUseCase {
@@ -17,7 +18,8 @@ export class HandleInboundMessageUseCase {
   ) {}
 
   execute(raw: RawInboundMessage): void {
-    if (raw.type !== "text" || !raw.text) {
+    const text = this.resolveText(raw);
+    if (text === undefined) {
       this.logger.warn("Mensagem inbound de tipo não suportado ignorada", {
         messageId: raw.id,
         type: raw.type,
@@ -28,7 +30,7 @@ export class HandleInboundMessageUseCase {
     const message = InboundMessage.create({
       from: raw.from,
       messageId: raw.id,
-      text: raw.text.body,
+      text,
       timestamp: new Date(Number(raw.timestamp) * 1000),
     });
 
@@ -52,5 +54,11 @@ export class HandleInboundMessageUseCase {
         error: error instanceof Error ? error.message : String(error),
       });
     }
+  }
+
+  private resolveText(raw: RawInboundMessage): string | undefined {
+    if (raw.type === "text" && raw.text) return raw.text.body;
+    if (raw.type === "button" && raw.button) return raw.button.text;
+    return undefined;
   }
 }

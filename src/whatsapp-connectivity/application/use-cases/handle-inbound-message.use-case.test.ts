@@ -42,7 +42,59 @@ describe("HandleInboundMessageUseCase", () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it("loga e ignora, sem lançar nem encaminhar, uma mensagem de tipo ainda não suportado", () => {
+  it("normaliza, loga e encaminha ao port de processamento um toque em botão de template", () => {
+    const logger = fakeLogger();
+    const port = fakePort();
+    const useCase = new HandleInboundMessageUseCase(logger, port);
+
+    useCase.execute({
+      from: "5511999999999",
+      id: "wamid.button",
+      timestamp: "1700000000",
+      type: "button",
+      button: { text: "Tenho interesse em saber mais", payload: "INTERESSE" },
+    });
+
+    expect(logger.info).toHaveBeenCalledWith(
+      "Mensagem inbound recebida",
+      expect.objectContaining({
+        from: "5511999999999",
+        messageId: "wamid.button",
+        text: "Tenho interesse em saber mais",
+      }),
+    );
+    expect(port.receive).toHaveBeenCalledWith({
+      from: "5511999999999",
+      messageId: "wamid.button",
+      text: "Tenho interesse em saber mais",
+      timestamp: new Date(1700000000 * 1000),
+    });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it("loga e ignora, sem lançar nem encaminhar, uma mensagem do tipo button sem o campo button", () => {
+    const logger = fakeLogger();
+    const port = fakePort();
+    const useCase = new HandleInboundMessageUseCase(logger, port);
+
+    expect(() =>
+      useCase.execute({
+        from: "5511999999999",
+        id: "wamid.button-sem-payload",
+        timestamp: "1700000000",
+        type: "button",
+      }),
+    ).not.toThrow();
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      "Mensagem inbound de tipo não suportado ignorada",
+      expect.objectContaining({ messageId: "wamid.button-sem-payload", type: "button" }),
+    );
+    expect(logger.info).not.toHaveBeenCalled();
+    expect(port.receive).not.toHaveBeenCalled();
+  });
+
+  it("loga e ignora, sem lançar nem encaminhar, uma mensagem de um tipo ainda não suportado (ex.: imagem)", () => {
     const logger = fakeLogger();
     const port = fakePort();
     const useCase = new HandleInboundMessageUseCase(logger, port);
